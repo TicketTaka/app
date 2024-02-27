@@ -5,6 +5,7 @@ plugins {
     id("io.spring.dependency-management") version "1.1.4"
     kotlin("jvm") version "1.9.22"
     kotlin("plugin.spring") version "1.9.22"
+    kotlin("plugin.noarg") version "1.8.22"  //송종호
 }
 
 group = "com.jspl"
@@ -17,6 +18,29 @@ java {
 repositories {
     mavenCentral()
 }
+
+
+/**
+ * 코틀린 클래스가 기본 final이라 지연로딩이 안된다
+ * open을 자동으로 붙여주는 플러그인
+ * -송종호
+ */
+allOpen {
+    annotation("jakarta.persistence.Entity")
+    annotation("jakarta.persistence.MappedSuperclass")
+    annotation("jakarta.persistence.Embeddable")
+}
+
+/**
+ * hibernate에서는 인자가 없는 생성자가 필요한데 이를 자동으로 생성해주는 플러그인
+ * -송종호
+ * */
+noArg {
+    annotation("jakarta.persistence.Entity")
+    annotation("jakarta.persistence.MappedSuperclass")
+    annotation("jakarta.persistence.Embeddable")
+}
+
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
