@@ -2,6 +2,7 @@ package com.jspl.tickettaka.service
 
 import com.jspl.tickettaka.dto.reqeust.LoginRequestDTO
 import com.jspl.tickettaka.dto.reqeust.SignUpRequestDTO
+import com.jspl.tickettaka.dto.response.AccessTokenResponse
 import com.jspl.tickettaka.dto.response.MemberResponse
 import com.jspl.tickettaka.infra.exception.ErrorResponse
 import com.jspl.tickettaka.infra.jwt.JwtPlugin
@@ -42,7 +43,7 @@ class MemberService(
     }
 
 
-    fun login(request:LoginRequestDTO):String{
+    fun login(request:LoginRequestDTO):AccessTokenResponse{
         val (email, password) = request
         val foundMember = findByEmail(email)
 
@@ -59,7 +60,7 @@ class MemberService(
 
 
 
-
+        return data
     }
 
     private fun findByEmail(email: String): Member? {
