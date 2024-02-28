@@ -7,6 +7,7 @@ import jakarta.persistence.*
 class Performance(
     title: String,
     location: String,
+    locationId:String?,
     startDate: String,
     endDate: String,
     genre: String,
@@ -22,6 +23,9 @@ class Performance(
 
     @Column(name = "location")
     val location:String = location
+
+    @Column(name = "location_id")
+    val locationId:String? = locationId
 
     @Column(name = "start_date")
     val startDate:String = startDate

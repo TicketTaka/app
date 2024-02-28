@@ -77,6 +77,8 @@ class FacilityDataCrawling(
             println("Failed to fetch XML data from the first API.")
         }
 
+        println(allFacilities.size)
+
         facilityRepository.saveAll(allFacilities)
     }
 
@@ -179,8 +181,11 @@ class FacilityDataCrawling(
             val adres = doc.selectFirst("adres")?.text()
             val seatscale = doc.selectFirst("seatscale")?.text()
 
+            val pattern = "\\s*\\(.*?\\)".toRegex()
+            val replaceName = fcltynm?.replace(pattern, "")
+
             return Facility(
-                name = fcltynm ?: "",
+                name = replaceName ?: "",
                 uniqueId = mt10id ?: "",
                 detailCnt = mt13cnt ?: "",
                 character = fcltychartr ?: "",

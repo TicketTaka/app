@@ -2,6 +2,7 @@ package com.jspl.tickettaka.data
 
 import com.jspl.tickettaka.dto.response.PerformanceResDto
 import com.jspl.tickettaka.model.Performance
+import com.jspl.tickettaka.repository.FacilityRepository
 import com.jspl.tickettaka.repository.PerformanceRepository
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
@@ -13,6 +14,7 @@ import java.net.URL
 @Component
 class PerformanceDataCrawling(
     private val performanceRepository: PerformanceRepository,
+    private val facilityRepository: FacilityRepository,
     @Value("\${data.secret.key}")
     private val secretKey: String
 ) {
@@ -21,8 +23,8 @@ class PerformanceDataCrawling(
         val serviceKey = secretKey
         val params01 = mapOf(
             "service" to serviceKey,
-            "stdate" to "20240224",
-            "eddate" to "20240224",
+            "stdate" to "20240201",
+            "eddate" to "20240229",
             "cpage" to "1",
             "rows" to "2000",
             "prfstate" to "01",
@@ -30,8 +32,8 @@ class PerformanceDataCrawling(
         )
         val params02 = mapOf(
             "service" to serviceKey,
-            "stdate" to "20240224",
-            "eddate" to "20240224",
+            "stdate" to "20240201",
+            "eddate" to "20240229",
             "cpage" to "1",
             "rows" to "2000",
             "prfstate" to "02",
@@ -41,24 +43,34 @@ class PerformanceDataCrawling(
         val xmlData01 = sendGetRequest(firstApiUrl, params01)
         val xmlData02 = sendGetRequest(firstApiUrl, params02)
 
-        val allPerformances = mutableListOf<Performance>()
+        val allPerformance01 = mutableListOf<Performance>()
+        val allPerformance02 = mutableListOf<Performance>()
 
         if(xmlData01 != null && xmlData02 != null) {
             val mt20ids01 = parseXmlForMt20Ids(xmlData01)
             val mt20ids02 = parseXmlForMt20Ids(xmlData02)
 
-            val mt20ids = mt20ids01 + mt20ids02
-
-            mt20ids.forEach { mt20id ->
+            mt20ids01.forEach { mt20id ->
                 val secondApiUrl = "https://www.kopis.or.kr/openApi/restful/pblprfr/$mt20id"
                 val secondApiParams = mapOf("service" to serviceKey, "newsql" to "Y")
                 val secondApiResponse = sendGetRequest(secondApiUrl, secondApiParams)
 
-                extractAndProcessData(secondApiResponse)?.let { allPerformances.add(it) }
+                extractAndProcessData(secondApiResponse)?.let { allPerformance01.add(it) }
             }
-            println(allPerformances.size)
+            println(allPerformance01.size)
 
-            performanceRepository.saveAll(allPerformances)
+            performanceRepository.saveAll(allPerformance01)
+
+            mt20ids02.forEach { mt20id ->
+                val secondApiUrl = "https://www.kopis.or.kr/openApi/restful/pblprfr/$mt20id"
+                val secondApiParams = mapOf("service" to serviceKey, "newsql" to "Y")
+                val secondApiResponse = sendGetRequest(secondApiUrl, secondApiParams)
+
+                extractAndProcessData(secondApiResponse)?.let { allPerformance02.add(it) }
+            }
+            println(allPerformance02.size)
+
+            performanceRepository.saveAll(allPerformance02)
         } else {
             println("Failed to fetch XML data from the first API.")
         }
@@ -106,16 +118,40 @@ class PerformanceDataCrawling(
             val genrenm = doc.selectFirst("genrenm")?.text()
             val prfstate = doc.selectFirst("prfstate")?.text()
 
+            val pattern1 = "\\s*\\(.*?\\)".toRegex()
+            val replaceName = fcltynm?.replace(pattern1, "")
+
+            val pattern2 = "\\)$".toRegex()
+            val resultName = replaceName?.replace(pattern2, "")
+
+//            val pattern = "\\s*\\([^)]*\\)\\s*".toRegex()
+//            val result = fcltynm?.replace(pattern, "")
+//            val findName = result?.trim()
+//            println(findName)
+//            val facilityId = findName?.let { facilityRepository.findIdByNameString(it) }
+
+            val resultList = resultName?.let { facilityRepository.findIdByNameString(it) }
+            var result: String? = null
+            if(resultList != null){
+                result = if(resultList.size == 1) {
+                    resultList[0]
+                } else {
+                    null
+                }
+            }
+
+
             if (pcseguidance != null && pcseguidance.length <= MAX_LENGTH && prfstate != null) {
                 return Performance(
-                    title = prfnm ?: "",
-                    location = fcltynm ?: "",
-                    startDate = prfpdfrom ?: "",
-                    endDate = prfpdto ?: "",
-                    genre = genrenm ?: "",
-                    priceInfo = pcseguidance,
-                    state = prfstate
-                )
+                        title = prfnm ?: "",
+                        location = resultName ?: "",
+                        locationId = result ?: "",
+                        startDate = prfpdfrom ?: "",
+                        endDate = prfpdto ?: "",
+                        genre = genrenm ?: "",
+                        priceInfo = pcseguidance,
+                        state = prfstate
+                    )
             }
         } else {
             println("Failed to fetch XML data from the second API.")
