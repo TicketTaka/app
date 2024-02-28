@@ -15,8 +15,8 @@ class FacilityApi(
         facilityService.facilityUpdate()
     }
 
-//    @GetMapping("update-facility-details")
-//    fun updateFacilityDetail() {
-//        facilityService.facilityDetailUpdate()
-//    }
+    @GetMapping("update-facility-details")
+    fun updateFacilityDetail() {
+        facilityService.facilityDetailUpdate()
+    }
 }
