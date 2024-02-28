@@ -11,7 +11,7 @@ class FacilityService(
         facilityDataCrawling.fetchAndSaveFacilities()
     }
 
-//    fun facilityDetailUpdate() {
-//        facilityDataCrawling.fetchAndProcessFacilitiesDetail()
-//    }
+    fun facilityDetailUpdate() {
+        facilityDataCrawling.createConcertHall()
+    }
 }

@@ -22,7 +22,7 @@ import java.util.concurrent.Executors
 @Component
 class FacilityDataCrawling(
     private val facilityRepository: FacilityRepository,
-//    private val facilityDetailRepository: FacilityDetailRepository
+    private val facilityDetailRepository: FacilityDetailRepository,
 
     @Value("\${data.secret.key}")
     private val secretKey: String
@@ -35,35 +35,38 @@ class FacilityDataCrawling(
             "service" to serviceKey,
             "cpage" to "1",
             "rows" to "3000",
-            "fcltychartr" to "1"
+//            "fcltychartr" to "1"
         )
-        val params2 = mapOf(
-            "service" to serviceKey,
-            "cpage" to "1",
-            "rows" to "3000",
-            "fcltychartr" to "2"
-        )
-        val params3 = mapOf(
-            "service" to serviceKey,
-            "cpage" to "1",
-            "rows" to "3000",
-            "fcltychartr" to "3"
-        )
+//        val params2 = mapOf(
+//            "service" to serviceKey,
+//            "cpage" to "1",
+//            "rows" to "3000",
+//            "fcltychartr" to "2"
+//        )
+//        val params3 = mapOf(
+//            "service" to serviceKey,
+//            "cpage" to "1",
+//            "rows" to "3000",
+//            "fcltychartr" to "3"
+//        )
 
         val xmlData1 = sendGetRequest(firstApiUrl, params1)
-        val xmlData2 = sendGetRequest(firstApiUrl, params2)
-        val xmlData3 = sendGetRequest(firstApiUrl, params3)
+//        val xmlData2 = sendGetRequest(firstApiUrl, params2)
+//        val xmlData3 = sendGetRequest(firstApiUrl, params3)
 
         val allFacilities = mutableListOf<Facility>()
 
-        if (xmlData1 != null && xmlData2 != null && xmlData3 != null) {
+        if (xmlData1 != null
+//            && xmlData2 != null
+//            && xmlData3 != null
+            ) {
             val mt10id01 = parseXmlForMt10id(xmlData1)
-            val mt10id02 = parseXmlForMt10id(xmlData2)
-            val mt10id03 = parseXmlForMt10id(xmlData3)
+//            val mt10id02 = parseXmlForMt10id(xmlData2)
+//            val mt10id03 = parseXmlForMt10id(xmlData3)
 
-            val mt10ids = mt10id01 + mt10id02 + mt10id03
+//            val mt10ids = mt10id01 + mt10id02 + mt10id03
 
-            mt10ids.forEach { mt10id ->
+            mt10id01.forEach { mt10id ->
                 val secondApiUrl = "https://kopis.or.kr/openApi/restful/prfplc/$mt10id"
                 val secondApiParams = mapOf("service" to serviceKey, "newsql" to "Y")
                 val secondApiResponse = sendGetRequest(secondApiUrl, secondApiParams)
@@ -73,6 +76,8 @@ class FacilityDataCrawling(
         } else {
             println("Failed to fetch XML data from the first API.")
         }
+
+        println(allFacilities.size)
 
         facilityRepository.saveAll(allFacilities)
     }
@@ -113,6 +118,27 @@ class FacilityDataCrawling(
 //
 //        dispatcher.close()
 //    }
+    @Transactional
+    fun createConcertHall() {
+        val facilities = facilityRepository.findAll()
+
+        for(facility in facilities) {
+            val facilityHallNum = facility.detailCnt.toInt()
+            var seatCnt = 0
+            if(facilityHallNum != 0) {
+                seatCnt = facility.seatScale.toInt() / facilityHallNum
+            }
+            if(facilityHallNum != 1) {
+                for (hallNum in facilityHallNum downTo 1) {
+                    val concertHall = FacilityDetail("${hallNum}관", seatCnt.toString(), facility.name, facility.uniqueId)
+                    facilityDetailRepository.save(concertHall)
+                }
+            } else {
+                val concertHall = FacilityDetail("본관", seatCnt.toString(), facility.name, facility.uniqueId)
+                facilityDetailRepository.save(concertHall)
+            }
+        }
+    }
 
     private fun sendGetRequest(url: String, params: Map<String, String>): String? {
         val urlBuilder = StringBuilder(url)
@@ -155,8 +181,11 @@ class FacilityDataCrawling(
             val adres = doc.selectFirst("adres")?.text()
             val seatscale = doc.selectFirst("seatscale")?.text()
 
+            val pattern = "\\s*\\(.*?\\)".toRegex()
+            val replaceName = fcltynm?.replace(pattern, "")
+
             return Facility(
-                name = fcltynm ?: "",
+                name = replaceName ?: "",
                 uniqueId = mt10id ?: "",
                 detailCnt = mt13cnt ?: "",
                 character = fcltychartr ?: "",

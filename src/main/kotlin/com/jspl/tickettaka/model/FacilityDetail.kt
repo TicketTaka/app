@@ -8,7 +8,8 @@ class FacilityDetail(
     facilityDetailName: String,
     seatCnt: String,
 //    facility: Facility
-    facilityName: String
+    facilityName: String,
+    facilityId: String
 ) {
 
 //    init {
@@ -30,4 +31,7 @@ class FacilityDetail(
 //    val facility: Facility = facility
     @Column(name = "facility_name")
     val facilityName: String = facilityName
+
+    @Column(name = "facility_id")
+    val facilityId: String = facilityId
 }
