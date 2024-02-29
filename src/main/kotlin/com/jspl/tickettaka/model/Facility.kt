@@ -9,7 +9,9 @@ class Facility(
     uniqueId: String,
     detailCnt: String,
     character: String,
-    location: String,
+    sido: String,
+    gugun: String,
+    locationDetail: String,
     seatScale: String
 ) {
     @Id
@@ -28,8 +30,14 @@ class Facility(
     @Column(name = "character")
     val character: String = character
 
+    @Column(name = "location_1")
+    val sido: String = sido
+
+    @Column(name = "location_2")
+    val gugun: String = gugun
+
     @Column(name = "area")
-    val location: String = location
+    val location: String = locationDetail
 
     @Column(name = "seat_scale")
     val seatScale: String = seatScale

@@ -1,6 +1,5 @@
 package com.jspl.tickettaka.data
 
-import com.jspl.tickettaka.dto.response.PerformanceResDto
 import com.jspl.tickettaka.model.Performance
 import com.jspl.tickettaka.repository.FacilityRepository
 import com.jspl.tickettaka.repository.PerformanceRepository
@@ -10,6 +9,8 @@ import org.jsoup.nodes.Element
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.net.URL
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 @Component
 class PerformanceDataCrawling(
@@ -118,6 +119,10 @@ class PerformanceDataCrawling(
             val genrenm = doc.selectFirst("genrenm")?.text()
             val prfstate = doc.selectFirst("prfstate")?.text()
 
+            val formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd")
+            val formatStartDate: LocalDate = LocalDate.parse(prfpdfrom, formatter)
+            val formatEndDate: LocalDate = LocalDate.parse(prfpdto, formatter)
+
             val pattern1 = "\\s*\\(.*?\\)".toRegex()
             val replaceName = fcltynm?.replace(pattern1, "")
 
@@ -146,8 +151,8 @@ class PerformanceDataCrawling(
                         title = prfnm ?: "",
                         location = resultName ?: "",
                         locationId = result ?: "",
-                        startDate = prfpdfrom ?: "",
-                        endDate = prfpdto ?: "",
+                        startDate = formatStartDate,
+                        endDate = formatEndDate,
                         genre = genrenm ?: "",
                         priceInfo = pcseguidance,
                         state = prfstate

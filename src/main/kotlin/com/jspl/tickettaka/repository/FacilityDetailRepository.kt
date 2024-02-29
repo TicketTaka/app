@@ -4,4 +4,5 @@ import com.jspl.tickettaka.model.FacilityDetail
 import org.springframework.data.jpa.repository.JpaRepository
 
 interface FacilityDetailRepository:JpaRepository<FacilityDetail, Long> {
+    fun findAllByFacilityId(facilityId: String): List<FacilityDetail>
 }
