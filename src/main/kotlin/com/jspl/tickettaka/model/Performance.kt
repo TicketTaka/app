@@ -1,6 +1,8 @@
 package com.jspl.tickettaka.model
 
 import jakarta.persistence.*
+import java.io.Serializable
+import java.time.LocalDate
 
 @Entity
 @Table(name = "performances")
@@ -8,8 +10,8 @@ class Performance(
     title: String,
     location: String,
     locationId:String?,
-    startDate: String,
-    endDate: String,
+    startDate: LocalDate,
+    endDate: LocalDate,
     genre: String,
     priceInfo: String,
     state: String,
@@ -28,10 +30,10 @@ class Performance(
     val locationId:String? = locationId
 
     @Column(name = "start_date")
-    val startDate:String = startDate
+    val startDate: LocalDate = startDate
 
     @Column(name = "end_date")
-    val endDate:String =  endDate
+    val endDate: LocalDate =  endDate
 
     @Column(name = "genre")
     val genre:String = genre
