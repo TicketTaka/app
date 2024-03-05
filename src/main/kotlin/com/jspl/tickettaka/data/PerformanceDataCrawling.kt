@@ -1,24 +1,30 @@
 package com.jspl.tickettaka.data
 
 import com.jspl.tickettaka.model.Performance
-import com.jspl.tickettaka.repository.FacilityRepository
-import com.jspl.tickettaka.repository.PerformanceRepository
+import com.jspl.tickettaka.model.PerformanceInstance
+import com.jspl.tickettaka.repository.*
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
+import org.springframework.transaction.annotation.Transactional
 import java.net.URL
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.util.*
 
 @Component
 class PerformanceDataCrawling(
     private val performanceRepository: PerformanceRepository,
+    private val performanceInstanceRepository: PerformanceInstanceRepository,
     private val facilityRepository: FacilityRepository,
+    private val facilityDetailRepository: FacilityDetailRepository,
+    private val facilityInstanceRepository: FacilityInstanceRepository,
     @Value("\${data.secret.key}")
     private val secretKey: String
 ) {
+    @Transactional
     fun execute(){
         val firstApiUrl = "https://www.kopis.or.kr/openApi/restful/pblprfr"
         val serviceKey = secretKey
@@ -76,6 +82,37 @@ class PerformanceDataCrawling(
             println("Failed to fetch XML data from the first API.")
         }
     }
+
+//    fun createInstance() {
+//        val allPerformance = performanceRepository.findAll()
+//        for(performance in allPerformance) {
+//            var startDate = performance.startDate
+//            val endDate = performance.endDate
+//            val facilityId = performance.locationId
+//            val concertHalls = facilityId?.let { facilityInstanceRepository.findFacilityInstanceByFacilityName(it) }
+//            val possibleFacilityCnt = concertHalls?.size
+//            val random = Random()
+//            val selectedIndexes = mutableSetOf<Int>()
+//
+//            while(startDate != endDate.plusDays(1)) {
+//                if(possibleFacilityCnt != 1) {
+//                    var randomIndex = concertHalls?.let { random.nextInt(it.size) }
+//                    while (selectedIndexes.contains(randomIndex)) {
+//                        if (concertHalls != null) {
+//                            randomIndex = random.nextInt(concertHalls.size)
+//                        }
+//                    }
+//                    if (randomIndex != null) {
+//                        selectedIndexes.add(randomIndex)
+//                        val facilityInstance = concertHalls?.get(randomIndex)
+//                        val performanceInstance = PerformanceInstance(performance.title, performance.uniqueId, facilityInstance.facilityDetail.facilityName, facilityInstance.facilityInstanceId, facilityInstance.facilityDetail.facilityDetailName, facilityInstance.facilityDetail.seatCnt)
+//                    }
+//
+//                }
+//                startDate = startDate.plusDays(1)
+//            }
+//        }
+//    }
     private fun sendGetRequest(url: String, params: Map<String, String>): String? {
         val urlBuilder = StringBuilder(url)
         urlBuilder.append("?")
@@ -118,6 +155,7 @@ class PerformanceDataCrawling(
             val pcseguidance = doc.selectFirst("pcseguidance")?.text()
             val genrenm = doc.selectFirst("genrenm")?.text()
             val prfstate = doc.selectFirst("prfstate")?.text()
+            val mt20id = doc.selectFirst("mt20id")?.text()
 
             val formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd")
             val formatStartDate: LocalDate = LocalDate.parse(prfpdfrom, formatter)
@@ -149,6 +187,7 @@ class PerformanceDataCrawling(
             if (pcseguidance != null && pcseguidance.length <= MAX_LENGTH && prfstate != null) {
                 return Performance(
                         title = prfnm ?: "",
+                        uniqueId = mt20id ?: "",
                         location = resultName ?: "",
                         locationId = result ?: "",
                         startDate = formatStartDate,

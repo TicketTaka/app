@@ -8,6 +8,7 @@ import java.time.LocalDate
 @Table(name = "performances")
 class Performance(
     title: String,
+    uniqueId: String,
     location: String,
     locationId:String?,
     startDate: LocalDate,
@@ -22,6 +23,9 @@ class Performance(
 
     @Column(name = "title")
     val title:String = title
+
+    @Column(name = "unique_id")
+    val uniqueId: String = uniqueId
 
     @Column(name = "location")
     val location:String = location

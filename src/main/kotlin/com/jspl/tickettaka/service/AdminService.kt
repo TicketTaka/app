@@ -1,6 +1,7 @@
 package com.jspl.tickettaka.service
 
 import com.jspl.tickettaka.dto.reqeust.PerformanceRequest
+import com.jspl.tickettaka.dto.response.FacilityDetailResDto
 import com.jspl.tickettaka.model.FacilityDetail
 import com.jspl.tickettaka.repository.AdminRepository
 import com.jspl.tickettaka.repository.FacilityDetailRepository
@@ -20,10 +21,10 @@ class AdminService(
     private val performanceRepository: PerformanceRepository,
     private val facilityDetailRepository: FacilityDetailRepository
 ) {
-    fun createPerformance(sido: String,
+    fun findConcertHall(sido: String,
                           gugun: String,
                           startDate: String,
-                          endDate: String): List<FacilityDetail> {
+                          endDate: String): List<FacilityDetailResDto> {
         val possibleFacilities: MutableList<FacilityDetail> = mutableListOf()
         val findFacilities = facilityRepository.findFacilityOfLocation(sido, gugun)
         val formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd")
@@ -58,7 +59,7 @@ class AdminService(
             }
         }
 
-        return possibleFacilities
+        return FacilityDetailResDto.fromEntities(possibleFacilities)
     }
 
 }
