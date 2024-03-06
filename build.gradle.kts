@@ -6,6 +6,7 @@ plugins {
     kotlin("jvm") version "1.9.22"
     kotlin("plugin.spring") version "1.9.22"
     kotlin("plugin.noarg") version "1.8.22"
+    kotlin("kapt") version "1.8.22" // 추가!
 }
 
 group = "com.jspl"
@@ -19,13 +20,40 @@ repositories {
     mavenCentral()
 }
 
+
+/**
+ * 코틀린 클래스가 기본 final이라 지연로딩이 안된다
+ * open을 자동으로 붙여주는 플러그인
+ * -송종호
+ */
+allOpen {
+    annotation("jakarta.persistence.Entity")
+    annotation("jakarta.persistence.MappedSuperclass")
+    annotation("jakarta.persistence.Embeddable")
+}
+
+/**
+ * hibernate에서는 인자가 없는 생성자가 필요한데 이를 자동으로 생성해주는 플러그인
+ * -송종호
+ * */
+noArg {
+    annotation("jakarta.persistence.Entity")
+    annotation("jakarta.persistence.MappedSuperclass")
+    annotation("jakarta.persistence.Embeddable")
+}
+
+val queryDslVersion = "5.0.0"  //추가
+
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
 
     implementation("org.springframework.boot:spring-boot-starter-validation")
-    //implementation("org.springframework.boot:spring-boot-starter-security")
+    implementation("org.springframework.boot:spring-boot-starter-security")
+
+    implementation("com.querydsl:querydsl-jpa:$queryDslVersion:jakarta") // 추가!
+    kapt("com.querydsl:querydsl-apt:$queryDslVersion:jakarta") // 추가!
 
     //jwt
     implementation("io.jsonwebtoken:jjwt-api:0.12.3")
