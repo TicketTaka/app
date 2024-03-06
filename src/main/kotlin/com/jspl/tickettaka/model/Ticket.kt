@@ -11,11 +11,11 @@ class Ticket(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id:Long? = null
 
-    @회원아이디
-    @공연인스턴스
-
-
-    금액,좌석번호 ,예매시간
+//    @회원아이디
+//    @공연인스턴스
+//
+//
+//    금액,좌석번호 ,예매시간
 
 ) {
 }
