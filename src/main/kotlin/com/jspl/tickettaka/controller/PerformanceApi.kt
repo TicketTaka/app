@@ -10,9 +10,9 @@ import org.springframework.web.bind.annotation.RestController
 class PerformanceApi(
     private val performanceService: PerformanceService
 ) {
-    @GetMapping("/update-performance")
-    fun update() {
-        performanceService.updatePerformance()
-        println("complete")
-    }
+//    @GetMapping("/update-performance")
+//    fun update() {
+//        performanceService.updatePerformance()
+//        println("complete")
+//    }
 }

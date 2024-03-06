@@ -27,8 +27,6 @@ class JwtAuthenticationFilter (
         filterChain: FilterChain
     ) {
         val jwt = request.getBearerToken()
-
-
         if(jwt != null){
 
             jwtPlugin.validateToken(jwt)
@@ -41,11 +39,9 @@ class JwtAuthenticationFilter (
                         .also { SecurityContextHolder.getContext().authentication = it }
                 }
 
-
         }
         filterChain.doFilter(request,response)
     }
-
 
     //오류가 발생 되었을 경우 여기로 오도록
     private fun HttpServletRequest.getBearerToken():String?{

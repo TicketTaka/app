@@ -14,7 +14,7 @@ import java.util.*
 class JwtPlugin() {
     companion object {
         const val issuer = "티켓"
-        const val secret = "PO4c8z41Hia5gJG3oeuFJMRYBB4Ws4aZ"
+        const val secret = "PO4c8z41Hia5gJG3oeuFJMRYBB4Ws4aZ"  // 추후 수정
         const val accessTokenExpirationHour: Long = 168
     }
 
@@ -25,14 +25,14 @@ class JwtPlugin() {
         }
     }
 
-    fun generateAccessToken(subject: String, role: String): String {
-        return generateToken(subject, role, Duration.ofHours(accessTokenExpirationHour))
+    fun generateAccessToken(subject: String,username:String, role: String): String {
+        return generateToken(subject, username ,role, Duration.ofHours(accessTokenExpirationHour))
     }
 
 
-    private fun generateToken(subject: String, role: String,expirationPeriod: Duration): String {
+    private fun generateToken(subject: String, username: String,role: String,expirationPeriod: Duration): String {
         val claims: Claims = Jwts.claims()
-            .add(mapOf("role" to role)).build()
+            .add(mapOf("role" to role,"username" to username)).build()
 
         val now = Instant.now()
         val key = Keys.hmacShaKeyFor(secret.toByteArray(StandardCharsets.UTF_8))

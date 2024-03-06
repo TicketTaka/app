@@ -1,5 +1,6 @@
 package com.jspl.tickettaka.model
 
+import com.jspl.tickettaka.dto.response.CheckMemberResponse
 import com.jspl.tickettaka.dto.response.MemberResponse
 import com.jspl.tickettaka.model.enums.MemberRole
 import jakarta.persistence.*
@@ -8,6 +9,10 @@ import jakarta.persistence.*
 @Table
 class Member(
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    val id:Long? = null,
+
     @Column(name = "email")
     val email:String,
 
@@ -15,20 +20,20 @@ class Member(
     val username:String,
 
     @Column(name = "password")
-    val password : String,
+    val password : String?,
 
     @Column(name = "role")
-    val role : MemberRole
+    var role : MemberRole
 ) {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id:Long? = null
+
 }
 
-fun Member.toResponse(): MemberResponse {
-    return  MemberResponse(
+fun Member.toResponse(): CheckMemberResponse {
+    return  CheckMemberResponse(
+        id = id!!,
         email = email,
         username = username,
+        password = password,
         role = role.name
     )
 }

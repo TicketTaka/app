@@ -12,5 +12,4 @@ data class UserPrincipal(
         id,
         email,
         roles.map { SimpleGrantedAuthority("ROLE_$it" ) })
-
 }

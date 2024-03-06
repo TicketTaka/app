@@ -6,6 +6,7 @@ plugins {
     kotlin("jvm") version "1.9.22"
     kotlin("plugin.spring") version "1.9.22"
     kotlin("plugin.noarg") version "1.8.22"
+    kotlin("kapt") version "1.8.22" // 추가!
 }
 
 group = "com.jspl"
@@ -41,6 +42,7 @@ noArg {
     annotation("jakarta.persistence.Embeddable")
 }
 
+val queryDslVersion = "5.0.0"  //추가
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
@@ -48,7 +50,10 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect")
 
     implementation("org.springframework.boot:spring-boot-starter-validation")
-    //implementation("org.springframework.boot:spring-boot-starter-security")
+    implementation("org.springframework.boot:spring-boot-starter-security")
+
+    implementation("com.querydsl:querydsl-jpa:$queryDslVersion:jakarta") // 추가!
+    kapt("com.querydsl:querydsl-apt:$queryDslVersion:jakarta") // 추가!
 
     //jwt
     implementation("io.jsonwebtoken:jjwt-api:0.12.3")
