@@ -1,8 +1,10 @@
 package com.jspl.tickettaka.service
 
 import com.jspl.tickettaka.dto.reqeust.PerformanceRequest
+import com.jspl.tickettaka.dto.response.AvailableDateResDto
 import com.jspl.tickettaka.dto.response.FacilityDetailResDto
 import com.jspl.tickettaka.model.FacilityDetail
+import com.jspl.tickettaka.model.FacilityInstance
 import com.jspl.tickettaka.repository.*
 import org.springframework.stereotype.Service
 import java.io.Serializable
@@ -44,4 +46,15 @@ class AdminService(
         return FacilityDetailResDto.fromEntities(possibleFacilities)
     }
 
+    fun findConcertHallByName(facilityId: String): List<AvailableDateResDto> {
+        val facilities = facilityDetailRepository.findAllByFacilityId(facilityId)
+        val possibleFacilities: MutableList<FacilityInstance> = mutableListOf()
+
+        for(facilityDetail in facilities) {
+            val facilityInstances = facilityInstanceRepository.findAvailableDate(facilityDetail)
+            possibleFacilities.addAll(facilityInstances)
+        }
+
+        return AvailableDateResDto.fromEntities(possibleFacilities)
+    }
 }

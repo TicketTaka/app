@@ -13,4 +13,7 @@ interface FacilityInstanceRepository: JpaRepository<FacilityInstance, Long> {
     @Query("select fi from FacilityInstance fi where fi.date >= :startDate and fi.date <= :endDate and fi.facilityDetail = :facilityDetail and fi.availability = true")
     fun findAvailableConcertHall(startDate: LocalDate, endDate: LocalDate, facilityDetail: FacilityDetail): List<FacilityInstance>
 
+    @Query("select fi from FacilityInstance fi where fi.facilityDetail = :facilityDetail and fi.availability = true")
+    fun findAvailableDate(facilityDetail: FacilityDetail): List<FacilityInstance>
+
 }
