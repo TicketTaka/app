@@ -62,7 +62,4 @@ class MemberController(
         return member.username
     }
 
-    //test push
-
-
 }
