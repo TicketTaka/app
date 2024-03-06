@@ -1,31 +1,38 @@
 package com.jspl.tickettaka.data
 
 import com.jspl.tickettaka.model.Performance
-import com.jspl.tickettaka.repository.FacilityRepository
-import com.jspl.tickettaka.repository.PerformanceRepository
+import com.jspl.tickettaka.model.PerformanceInstance
+import com.jspl.tickettaka.repository.*
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
+import org.springframework.transaction.annotation.Transactional
 import java.net.URL
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.util.*
+import kotlin.contracts.contract
 
 @Component
 class PerformanceDataCrawling(
     private val performanceRepository: PerformanceRepository,
+    private val performanceInstanceRepository: PerformanceInstanceRepository,
     private val facilityRepository: FacilityRepository,
+    private val facilityDetailRepository: FacilityDetailRepository,
+    private val facilityInstanceRepository: FacilityInstanceRepository,
     @Value("\${data.secret.key}")
     private val secretKey: String
 ) {
+    @Transactional
     fun execute(){
         val firstApiUrl = "https://www.kopis.or.kr/openApi/restful/pblprfr"
         val serviceKey = secretKey
         val params01 = mapOf(
             "service" to serviceKey,
-            "stdate" to "20240201",
-            "eddate" to "20240229",
+            "stdate" to "20240301",
+            "eddate" to "20240401",
             "cpage" to "1",
             "rows" to "2000",
             "prfstate" to "01",
@@ -33,8 +40,8 @@ class PerformanceDataCrawling(
         )
         val params02 = mapOf(
             "service" to serviceKey,
-            "stdate" to "20240201",
-            "eddate" to "20240229",
+            "stdate" to "20240301",
+            "eddate" to "20240401",
             "cpage" to "1",
             "rows" to "2000",
             "prfstate" to "02",
@@ -74,6 +81,67 @@ class PerformanceDataCrawling(
             performanceRepository.saveAll(allPerformance02)
         } else {
             println("Failed to fetch XML data from the first API.")
+        }
+    }
+
+    @Transactional
+    fun createInstance() {
+        val allPerformance = performanceRepository.findAll()
+        for (performance in allPerformance) {
+            val today = LocalDate.now()
+            val lastDate = today.plusMonths(1)
+            val startDate = performance.startDate
+            val endDate = performance.endDate
+            val facilityId = performance.locationId
+
+            val dateRange = if (today >= startDate && lastDate > endDate) {
+                Pair(today, endDate)
+            } else if (today >= startDate && lastDate <= endDate) {
+                Pair(today, lastDate)
+            } else if(today < startDate && lastDate > endDate) {
+                Pair(startDate, endDate)
+            } else {
+                Pair(startDate, lastDate)
+            }
+
+            val random = Random()
+
+            var currentDate = dateRange.first
+            while (currentDate != dateRange.second.plusDays(1)) {
+                val concertHalls = facilityDetailRepository.findAllByFacilityId(facilityId)
+                var possibleFacilityCnt = concertHalls.size
+//                val concertHalls = facilityInstanceRepository.findFacilityInstanceByFacilityName(facilityId, currentDate)
+                var index = 0
+                if(possibleFacilityCnt != 1) {
+                    index = random.nextInt(concertHalls.size)
+                }
+                val facilityDetail = concertHalls[index]
+                println(facilityDetail.facilityDetailId)
+                val facilityInstance = facilityInstanceRepository.findFacilityInstanceByFacilityDetailWithDate(facilityDetail, currentDate)
+                val performanceInstance = facilityInstance?.let {
+                    PerformanceInstance(
+                        performance.title,
+                        performance.uniqueId,
+                        it,
+                        facilityInstance.facilityDetail.facilityDetailName,
+                        currentDate,
+                        facilityInstance.facilityDetail.seatCnt.toLong()
+                    )
+                }
+
+                if (facilityInstance != null) {
+                    facilityInstance.availability = false
+                }
+
+                if (facilityInstance != null) {
+                    facilityInstanceRepository.save(facilityInstance)
+                }
+                if (performanceInstance != null) {
+                    performanceInstanceRepository.save(performanceInstance)
+                }
+
+                currentDate = currentDate.plusDays(1)
+            }
         }
     }
     private fun sendGetRequest(url: String, params: Map<String, String>): String? {
@@ -118,6 +186,7 @@ class PerformanceDataCrawling(
             val pcseguidance = doc.selectFirst("pcseguidance")?.text()
             val genrenm = doc.selectFirst("genrenm")?.text()
             val prfstate = doc.selectFirst("prfstate")?.text()
+            val mt20id = doc.selectFirst("mt20id")?.text()
 
             val formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd")
             val formatStartDate: LocalDate = LocalDate.parse(prfpdfrom, formatter)
@@ -146,11 +215,12 @@ class PerformanceDataCrawling(
             }
 
 
-            if (pcseguidance != null && pcseguidance.length <= MAX_LENGTH && prfstate != null) {
+            if (pcseguidance != null && pcseguidance.length <= MAX_LENGTH && prfstate != null && result != null) {
                 return Performance(
                         title = prfnm ?: "",
+                        uniqueId = mt20id ?: "",
                         location = resultName ?: "",
-                        locationId = result ?: "",
+                        locationId = result,
                         startDate = formatStartDate,
                         endDate = formatEndDate,
                         genre = genrenm ?: "",

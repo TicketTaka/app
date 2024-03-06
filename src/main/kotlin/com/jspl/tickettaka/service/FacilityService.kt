@@ -15,6 +15,7 @@ class FacilityService(
 
     fun facilityDetailUpdate() {
         facilityDataCrawling.createConcertHall()
+        facilityDataCrawling.createInstance()
     }
 
     fun findLocation1(): List<String> {

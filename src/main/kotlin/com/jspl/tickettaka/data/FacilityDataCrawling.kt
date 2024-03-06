@@ -2,27 +2,25 @@ package com.jspl.tickettaka.data
 
 import com.jspl.tickettaka.model.Facility
 import com.jspl.tickettaka.model.FacilityDetail
-import com.jspl.tickettaka.model.Performance
+import com.jspl.tickettaka.model.FacilityInstance
 import com.jspl.tickettaka.repository.FacilityDetailRepository
+import com.jspl.tickettaka.repository.FacilityInstanceRepository
 import com.jspl.tickettaka.repository.FacilityRepository
-import kotlinx.coroutines.asCoroutineDispatcher
-import kotlinx.coroutines.async
-import kotlinx.coroutines.runBlocking
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
-import org.jsoup.select.Elements
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import java.net.URL
-import java.net.URLEncoder
-import java.util.concurrent.Executors
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 @Component
 class FacilityDataCrawling(
     private val facilityRepository: FacilityRepository,
     private val facilityDetailRepository: FacilityDetailRepository,
+    private val facilityInstanceRepository: FacilityInstanceRepository,
 
     @Value("\${data.secret.key}")
     private val secretKey: String
@@ -72,6 +70,24 @@ class FacilityDataCrawling(
             }
 
             facilityDetailRepository.saveAll(concertHalls)
+        }
+    }
+
+    @Transactional
+    fun createInstance() {
+        val allFacilityDetail = facilityDetailRepository.findAll()
+        var today: LocalDate = LocalDate.now()
+        val endDate: LocalDate = today.plusMonths(1)
+
+        while (today != endDate) {
+            val formattedDate = today.format(DateTimeFormatter.ofPattern("yyyy.MM.dd"))
+            val parsedDate = LocalDate.parse(formattedDate, DateTimeFormatter.ofPattern("yyyy.MM.dd"))
+
+            for (facilityDetail in allFacilityDetail) {
+                val facilityInstance = FacilityInstance(facilityDetail, parsedDate)
+                facilityInstanceRepository.save(facilityInstance)
+            }
+            today = today.plusDays(1)
         }
     }
 
