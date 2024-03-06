@@ -15,7 +15,6 @@ import java.util.*
 
 @Service
 class AdminService(
-    private val adminRepository: AdminRepository,
     private val facilityRepository: FacilityRepository,
     private val performanceRepository: PerformanceRepository,
     private val facilityDetailRepository: FacilityDetailRepository,
