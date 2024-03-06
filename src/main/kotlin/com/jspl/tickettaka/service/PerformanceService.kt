@@ -11,5 +11,6 @@ class PerformanceService(
 ) {
     fun updatePerformance() {
         performanceDataCrawling.execute()
+        performanceDataCrawling.createInstance()
     }
 }

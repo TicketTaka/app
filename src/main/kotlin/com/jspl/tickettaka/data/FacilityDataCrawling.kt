@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import java.net.URL
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 @Component
 class FacilityDataCrawling(
@@ -77,9 +78,13 @@ class FacilityDataCrawling(
         val allFacilityDetail = facilityDetailRepository.findAll()
         var today: LocalDate = LocalDate.now()
         val endDate: LocalDate = today.plusMonths(1)
+
         while (today != endDate) {
+            val formattedDate = today.format(DateTimeFormatter.ofPattern("yyyy.MM.dd"))
+            val parsedDate = LocalDate.parse(formattedDate, DateTimeFormatter.ofPattern("yyyy.MM.dd"))
+
             for (facilityDetail in allFacilityDetail) {
-                val facilityInstance = FacilityInstance(facilityDetail, today)
+                val facilityInstance = FacilityInstance(facilityDetail, parsedDate)
                 facilityInstanceRepository.save(facilityInstance)
             }
             today = today.plusDays(1)

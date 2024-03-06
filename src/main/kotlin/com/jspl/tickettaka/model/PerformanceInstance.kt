@@ -8,12 +8,16 @@ import java.time.LocalDate
 class PerformanceInstance(
     performanceName: String,
     performanceUniqueId: String,
-    concertHallName: String,
-    facilityInstanceId: Long,
+    facilityInstance: FacilityInstance,
     session: String,
     date: LocalDate,
     remainSeat: Long,
 ) {
+
+    init {
+        facilityInstance.addPerformanceInstance(this)
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val performanceInstanceId: Long? = null
@@ -24,11 +28,9 @@ class PerformanceInstance(
     @Column(name = "performance_unique_id")
     val performanceUniqueId: String = performanceUniqueId
 
-    @Column(name = "concert_hall_name")
-    val concertHallName: String = concertHallName
-
-    @Column(name = "facility_instance_id")
-    val facilityInstanceId: Long = facilityInstanceId
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "facility_instance_id")
+    val facilityInstance: FacilityInstance = facilityInstance
 
     @Column(name = "session")
     val session: String = session

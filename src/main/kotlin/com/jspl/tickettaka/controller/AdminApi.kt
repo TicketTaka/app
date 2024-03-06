@@ -20,7 +20,7 @@ class AdminApi(
         @RequestParam location2: String,
         @RequestParam startDate: String,
         @RequestParam endDate: String): ResponseEntity<List<FacilityDetailResDto>> {
-        val answer = adminService.findConcertHall(location1, location2, startDate, endDate)
+        val answer = adminService.findConcertHallByDate(location1, location2, startDate, endDate)
 
         return ResponseEntity
             .status(HttpStatus.OK)

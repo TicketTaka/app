@@ -13,6 +13,7 @@ import java.net.URL
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.*
+import kotlin.contracts.contract
 
 @Component
 class PerformanceDataCrawling(
@@ -30,8 +31,8 @@ class PerformanceDataCrawling(
         val serviceKey = secretKey
         val params01 = mapOf(
             "service" to serviceKey,
-            "stdate" to "20240201",
-            "eddate" to "20240229",
+            "stdate" to "20240301",
+            "eddate" to "20240401",
             "cpage" to "1",
             "rows" to "2000",
             "prfstate" to "01",
@@ -39,8 +40,8 @@ class PerformanceDataCrawling(
         )
         val params02 = mapOf(
             "service" to serviceKey,
-            "stdate" to "20240201",
-            "eddate" to "20240229",
+            "stdate" to "20240301",
+            "eddate" to "20240401",
             "cpage" to "1",
             "rows" to "2000",
             "prfstate" to "02",
@@ -83,36 +84,66 @@ class PerformanceDataCrawling(
         }
     }
 
-//    fun createInstance() {
-//        val allPerformance = performanceRepository.findAll()
-//        for(performance in allPerformance) {
-//            var startDate = performance.startDate
-//            val endDate = performance.endDate
-//            val facilityId = performance.locationId
-//            val concertHalls = facilityId?.let { facilityInstanceRepository.findFacilityInstanceByFacilityName(it) }
-//            val possibleFacilityCnt = concertHalls?.size
-//            val random = Random()
-//            val selectedIndexes = mutableSetOf<Int>()
-//
-//            while(startDate != endDate.plusDays(1)) {
-//                if(possibleFacilityCnt != 1) {
-//                    var randomIndex = concertHalls?.let { random.nextInt(it.size) }
-//                    while (selectedIndexes.contains(randomIndex)) {
-//                        if (concertHalls != null) {
-//                            randomIndex = random.nextInt(concertHalls.size)
-//                        }
-//                    }
-//                    if (randomIndex != null) {
-//                        selectedIndexes.add(randomIndex)
-//                        val facilityInstance = concertHalls?.get(randomIndex)
-//                        val performanceInstance = PerformanceInstance(performance.title, performance.uniqueId, facilityInstance.facilityDetail.facilityName, facilityInstance.facilityInstanceId, facilityInstance.facilityDetail.facilityDetailName, facilityInstance.facilityDetail.seatCnt)
-//                    }
-//
-//                }
-//                startDate = startDate.plusDays(1)
-//            }
-//        }
-//    }
+    @Transactional
+    fun createInstance() {
+        val allPerformance = performanceRepository.findAll()
+        for (performance in allPerformance) {
+            val today = LocalDate.now()
+            val lastDate = today.plusMonths(1)
+            val startDate = performance.startDate
+            val endDate = performance.endDate
+            val facilityId = performance.locationId
+
+            val dateRange = if (today >= startDate && lastDate > endDate) {
+                Pair(today, endDate)
+            } else if (today >= startDate && lastDate <= endDate) {
+                Pair(today, lastDate)
+            } else if(today < startDate && lastDate > endDate) {
+                Pair(startDate, endDate)
+            } else {
+                Pair(startDate, lastDate)
+            }
+
+            val random = Random()
+
+            var currentDate = dateRange.first
+            while (currentDate != dateRange.second.plusDays(1)) {
+                val concertHalls = facilityDetailRepository.findAllByFacilityId(facilityId)
+                var possibleFacilityCnt = concertHalls.size
+//                val concertHalls = facilityInstanceRepository.findFacilityInstanceByFacilityName(facilityId, currentDate)
+                var index = 0
+                if(possibleFacilityCnt != 1) {
+                    index = random.nextInt(concertHalls.size)
+                }
+                val facilityDetail = concertHalls[index]
+                println(facilityDetail.facilityDetailId)
+                val facilityInstance = facilityInstanceRepository.findFacilityInstanceByFacilityDetailWithDate(facilityDetail, currentDate)
+                val performanceInstance = facilityInstance?.let {
+                    PerformanceInstance(
+                        performance.title,
+                        performance.uniqueId,
+                        it,
+                        facilityInstance.facilityDetail.facilityDetailName,
+                        currentDate,
+                        facilityInstance.facilityDetail.seatCnt.toLong()
+                    )
+                }
+
+                if (facilityInstance != null) {
+                    facilityInstance.availability = false
+                }
+
+                if (facilityInstance != null) {
+                    facilityInstanceRepository.save(facilityInstance)
+                }
+                if (performanceInstance != null) {
+                    performanceInstanceRepository.save(performanceInstance)
+                }
+
+                currentDate = currentDate.plusDays(1)
+            }
+        }
+    }
     private fun sendGetRequest(url: String, params: Map<String, String>): String? {
         val urlBuilder = StringBuilder(url)
         urlBuilder.append("?")
@@ -184,12 +215,12 @@ class PerformanceDataCrawling(
             }
 
 
-            if (pcseguidance != null && pcseguidance.length <= MAX_LENGTH && prfstate != null) {
+            if (pcseguidance != null && pcseguidance.length <= MAX_LENGTH && prfstate != null && result != null) {
                 return Performance(
                         title = prfnm ?: "",
                         uniqueId = mt20id ?: "",
                         location = resultName ?: "",
-                        locationId = result ?: "",
+                        locationId = result,
                         startDate = formatStartDate,
                         endDate = formatEndDate,
                         genre = genrenm ?: "",

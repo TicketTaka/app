@@ -22,9 +22,16 @@ class FacilityInstance(
     @JoinColumn(name = "facility_detail_id")
     val facilityDetail: FacilityDetail = facilityDetail
 
+    @OneToMany(mappedBy = "facilityInstance", cascade = [CascadeType.REMOVE])
+    var performanceInstanceList: MutableList<PerformanceInstance> = mutableListOf()
+
     @Column(name = "date")
     val date: LocalDate = date
 
     @Column(name = "availability")
-    val availability: Boolean = true
+    var availability: Boolean = true
+
+    fun addPerformanceInstance(performanceInstance: PerformanceInstance) {
+        performanceInstanceList.add(performanceInstance)
+    }
 }
