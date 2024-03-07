@@ -1,5 +1,6 @@
 package com.jspl.tickettaka.notification
 
+import com.jspl.tickettaka.exception.MsgFormat
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.MediaType
@@ -7,10 +8,15 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
 import java.io.IOException
+import javax.management.Notification
 
 
 @Service
-class NotificationService(private val sseRepository: EmitterRepository) {
+class NotificationService(
+    private val sseRepository: EmitterRepository,
+    private val notificationRepository: NotificationRepository,
+    private val authenticationService: AuthenticationService
+) {
 
     private val log = LoggerFactory.getLogger(NotificationService::class.java)
 
@@ -49,9 +55,9 @@ class NotificationService(private val sseRepository: EmitterRepository) {
 
     @Transactional
     fun sendNotification(event: NotificationEvent) {
-        val key = event.memberKey()
+        val key = event.memberKey
         val member = authenticationService.getMemberOrThrow(key)
-        val notification = Notification.of(event.message(), event.notificationType(), event.relatedUri())
+        val notification = Notification.of(event.message, event.notificationType, event.relatedUri)
         notification.addMember(member)
         notificationRepository.save(notification)
 

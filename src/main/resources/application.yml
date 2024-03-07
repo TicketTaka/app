@@ -16,3 +16,14 @@ spring:
     hibernate:
       ddl-auto: create
     show-sql: true
+
+  data:
+    redis:
+      host: local
+      port: 6379
+      lettuce:
+        pool:
+          max-active:
+          max-idle:
+          min-idle:
+          max-wait:

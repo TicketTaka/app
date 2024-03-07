@@ -46,10 +46,14 @@ dependencies {
 	implementation("org.jsoup:jsoup:1.14.2")
 
 	//coroution
-	implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.0")
+	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.0")
 
 	//Jedis
-	implementation ("redis.clients:jedis:3.7.0")
+	implementation("redis.clients:jedis:3.7.0")
+	implementation("org.springframework.boot:spring-boot-starter-data-redis")
+
+	// SSE
+	implementation ("org.springframework.boot:spring-boot-starter-webflux")
 
 	//security
 	implementation("org.springframework.boot:spring-boot-starter-security")

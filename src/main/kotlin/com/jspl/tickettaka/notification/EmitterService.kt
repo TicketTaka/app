@@ -16,11 +16,11 @@ class EmitterService(private val emitterRepository: EmitterRepository) {
         return sseEmitter
     }
 
-    fun findById(memberId: String): Optional<SseEmitter> {
+    fun find(memberId: String): Optional<SseEmitter> {
         return Optional.ofNullable(emitters[memberId])
     }
 
-    fun deleteById(eventId: String) {
+    fun delete(eventId: String) {
         emitters.remove(eventId)
     }
 }
