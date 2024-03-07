@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SSE Client</title>
+</head>
+<body>
+<div id="events-container"></div>
+
+<script>
+    const eventSource = new EventSource("/events");
+
+    eventSource.onmessage = function(event) {
+        const notification = document.createElement("events");
+        notification.textContent = event.data;
+        notificationContainer.appendChild(notification);
+        // const eventsDiv = document.getElementById("events");
+        // eventsDiv.innerHTML += event.data + "<br>";
+    };
+</script>
+</body>
+</html>
