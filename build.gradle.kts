@@ -8,7 +8,7 @@ plugins {
 	kotlin("plugin.jpa") version "1.9.22"
 }
 
-group = "org.example"
+group = "com.jspl"
 version = "0.0.1-SNAPSHOT"
 
 java {
