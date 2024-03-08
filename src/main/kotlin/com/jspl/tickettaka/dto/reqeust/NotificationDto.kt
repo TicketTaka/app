@@ -1,5 +1,6 @@
-package com.jspl.tickettaka.notification
+package com.jspl.tickettaka.dto.reqeust
 
+import com.jspl.tickettaka.model.Notification
 import java.net.URI
 
 data class NotificationDto(

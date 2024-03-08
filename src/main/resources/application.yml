@@ -19,11 +19,15 @@ spring:
 
   data:
     redis:
-      host: local
+      host: localhost
       port: 6379
-      lettuce:
-        pool:
-          max-active:
-          max-idle:
-          min-idle:
-          max-wait:
+#      lettuce:
+#        pool:
+#          max-active:
+#          max-idle:
+#          min-idle:
+#          max-wait:
+
+data:
+  secret:
+    key: myKey

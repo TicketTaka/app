@@ -1,5 +1,7 @@
-package com.jspl.tickettaka.notification
+package com.jspl.tickettaka.repository
 
+import org.springframework.stereotype.Component
+import org.springframework.stereotype.Repository
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
 import java.util.*
 

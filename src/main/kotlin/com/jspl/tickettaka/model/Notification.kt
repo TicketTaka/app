@@ -1,10 +1,12 @@
-package com.jspl.tickettaka.notification
+package com.jspl.tickettaka.model
 
+import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
-import org.springframework.data.annotation.Id
+import jakarta.persistence.Id
 import java.net.URI
 
+@Entity
 class Notification(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
