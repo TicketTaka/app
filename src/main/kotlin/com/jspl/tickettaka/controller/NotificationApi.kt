@@ -1,34 +1,45 @@
 package com.jspl.tickettaka.controller
 
-//@RequestMapping("/api/users/notification")
-//@RestController
-//@RequiredArgsConstructor
-//class NotificationApi {
-//    private val notificationService: NotificationService? = null
-//    // 응답 시 MIME 타입을 text/event-stream으로 보냄
-//    @GetMapping(value = ["/subscribe"], produces = [MediaType.TEXT_EVENT_STREAM_VALUE])
-//    fun subscribe(@AuthenticationPrincipal userDetails: UserDetails?): ResponseEntity<SseEmitter> {
-//        if (ObjectUtils.isEmpty(userDetails)) {
-//            throw NotificationException(ResultCode.UNAUTHORIZED, "연결 시 인증이 필요합니다.")
-//        }
-//        return ResponseEntity.ok(notificationService!!.subscribe(userDetails!!.username))
-//    }
-//
-////    @GetMapping("/subscribe")
-////    fun subscribe(authentication: Authentication): SseEmitter {
-////        // Authentication을 UserDto로 업캐스팅
-////        val userDto: UserDto = ClassUtils.getCastInstance(authentication.getPrincipal(), UserDto::class.java)
-////            .orElseThrow {
-////                ApplicationException(ResultCode.INTERNAL_SERVER_ERROR, "Casting to UserDto class failed")
-////            }
-////
-////        // 서비스를 통해 생성된 SseEmitter를 반환
-////        return notificationService!!.connectNotification(userDto.getId())
-////    }
-//
-//    @GetMapping("/events")
-//    fun getEvents(): Flux<ServerSentEvent<String>> {
-//        return Flux.interval(Duration.ofSeconds(1))
-//            .map { id -> ServerSentEvent.builder("Event message $id").build() }
-//    }
-//}
+import com.jspl.tickettaka.redis.RedisPublisher
+import com.jspl.tickettaka.redis.RedisSubscriber
+import lombok.RequiredArgsConstructor
+import org.springframework.data.redis.core.ReactiveRedisTemplate
+import org.springframework.data.redis.listener.ChannelTopic
+import org.springframework.http.codec.ServerSentEvent
+import org.springframework.web.bind.annotation.*
+import reactor.core.publisher.Flux
+import java.time.Duration
+
+@RequestMapping("/users/redis")
+@RestController
+@RequiredArgsConstructor
+class NotificationApi(
+    private val redisTemplate: ReactiveRedisTemplate<String, String>,
+    private val redisPublisher: RedisPublisher,
+    private val redisSubscriber: RedisSubscriber
+) {
+    companion object {
+        const val NOTIFICATION_CHANNEL = "notifications"
+    }
+
+    @GetMapping("/stream")
+    fun streamNotifications(): Flux<ServerSentEvent<String>> {
+        val messageFlux = redisTemplate.listenTo(ChannelTopic(NOTIFICATION_CHANNEL))
+            .map { it.message }
+            .map { ServerSentEvent.builder(it).build() }
+
+        return Flux.interval(Duration.ofSeconds(1L)) // Test to keep connection alive
+            .map { ServerSentEvent.builder<String>().comment("Test").build() }
+            .mergeWith(messageFlux)
+    }
+
+    @PostMapping("/publish/{channel}")
+    fun publishMessage(@PathVariable channel: String, @RequestBody message: String) {
+        redisPublisher.publishMessage(channel, message)
+    }
+
+    @GetMapping("/subscribe/{channel}")
+    fun subscribeToChannel(@PathVariable channel: String) {
+        redisSubscriber.subscribeToChannel(channel)
+    }
+}

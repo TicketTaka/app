@@ -1,4 +1,4 @@
-package com.jspl.tickettaka.notification
+package com.jspl.tickettaka.redis
 
 import org.springframework.stereotype.Service
 

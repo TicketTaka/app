@@ -49,11 +49,13 @@ dependencies {
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.0")
 
 	//Jedis
+	implementation("org.springframework.boot:spring-boot-starter-data-redis-reactive")
 	implementation("redis.clients:jedis:3.7.0")
-	implementation("org.springframework.boot:spring-boot-starter-data-redis")
+	implementation("io.lettuce:lettuce-core")
 
 	// SSE
 	implementation ("org.springframework.boot:spring-boot-starter-webflux")
+	implementation ("org.springframework.boot:spring-boot-starter-actuator")
 
 	//security
 	implementation("org.springframework.boot:spring-boot-starter-security")
