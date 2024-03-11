@@ -25,120 +25,112 @@ class PerformanceDataCrawling(
     @Value("\${data.secret.key}")
     private val secretKey: String
 ) {
-    @Transactional
-    fun execute(){
-        val firstApiUrl = "https://www.kopis.or.kr/openApi/restful/pblprfr"
+    fun fetchData(startDate: String, endDate: String, prfState: String): List<Performance>? {
+        val apiUrl = "https://www.kopis.or.kr/openApi/restful/pblprfr"
         val serviceKey = secretKey
-        val params01 = mapOf(
+        val params = mapOf(
             "service" to serviceKey,
-            "stdate" to "20240301",
-            "eddate" to "20240401",
+            "stdate" to startDate,
+            "eddate" to endDate,
             "cpage" to "1",
             "rows" to "2000",
-            "prfstate" to "01",
+            "prfstate" to prfState,
             "newsql" to "Y"
         )
-        val params02 = mapOf(
-            "service" to serviceKey,
-            "stdate" to "20240301",
-            "eddate" to "20240401",
-            "cpage" to "1",
-            "rows" to "2000",
-            "prfstate" to "02",
-            "newsql" to "Y"
-        )
+        val xmlData = sendGetRequest(apiUrl, params)
+        val allPerformance = mutableListOf<Performance>()
 
-        val xmlData01 = sendGetRequest(firstApiUrl, params01)
-        val xmlData02 = sendGetRequest(firstApiUrl, params02)
-
-        val allPerformance01 = mutableListOf<Performance>()
-        val allPerformance02 = mutableListOf<Performance>()
-
-        if(xmlData01 != null && xmlData02 != null) {
-            val mt20ids01 = parseXmlForMt20Ids(xmlData01)
-            val mt20ids02 = parseXmlForMt20Ids(xmlData02)
-
-            mt20ids01.forEach { mt20id ->
+        if (xmlData != null) {
+            val mt20ids = parseXmlForMt20Ids(xmlData)
+            mt20ids.forEach { mt20id ->
                 val secondApiUrl = "https://www.kopis.or.kr/openApi/restful/pblprfr/$mt20id"
                 val secondApiParams = mapOf("service" to serviceKey, "newsql" to "Y")
                 val secondApiResponse = sendGetRequest(secondApiUrl, secondApiParams)
-
-                extractAndProcessData(secondApiResponse)?.let { allPerformance01.add(it) }
+                extractAndProcessData(secondApiResponse)?.let { allPerformance.add(it) }
             }
-            println(allPerformance01.size)
+        } else {
+            println("Failed to fetch XML data from the API.")
+        }
+        return allPerformance.takeIf { it.isNotEmpty() }
+    }
 
+    fun execute(startDate: String, endDate: String) {
+        val allPerformance01 = fetchData(startDate, endDate, "01")
+        val allPerformance02 = fetchData(startDate, endDate, "02")
+
+        if (allPerformance01 != null && allPerformance02 != null) {
+            println(allPerformance01.size)
             performanceRepository.saveAll(allPerformance01)
 
-            mt20ids02.forEach { mt20id ->
-                val secondApiUrl = "https://www.kopis.or.kr/openApi/restful/pblprfr/$mt20id"
-                val secondApiParams = mapOf("service" to serviceKey, "newsql" to "Y")
-                val secondApiResponse = sendGetRequest(secondApiUrl, secondApiParams)
-
-                extractAndProcessData(secondApiResponse)?.let { allPerformance02.add(it) }
-            }
             println(allPerformance02.size)
-
             performanceRepository.saveAll(allPerformance02)
-        } else {
-            println("Failed to fetch XML data from the first API.")
+        }
+    }
+
+    fun update(startDate: String, endDate: String) {
+        val allPerformance01 = fetchData(startDate, endDate, "01")
+        val allPerformance02 = fetchData(startDate, endDate, "02")
+
+        if (allPerformance01 != null && allPerformance02 != null) {
+            val allPerformances = allPerformance01 + allPerformance02
+            val existingPerformances = performanceRepository.findAll()
+
+            existingPerformances.forEach { existingPerformance ->
+                val matchingPerformance = allPerformances.find { it.uniqueId == existingPerformance.uniqueId }
+                if (matchingPerformance != null) {
+                    existingPerformance.updateState(matchingPerformance)
+                    performanceRepository.save(existingPerformance)
+                } else {
+                    performanceRepository.delete(existingPerformance)
+                }
+            }
+
+            val newPerformances = allPerformances.filter { performance ->
+                existingPerformances.none { it.uniqueId == performance.uniqueId }
+            }
+            performanceRepository.saveAll(newPerformances)
         }
     }
 
     @Transactional
     fun createInstance() {
-        val allPerformance = performanceRepository.findAll()
+        val today = LocalDate.now()
+        val lastDate = today.plusMonths(1)
+        val allPerformance = performanceRepository.findAllByDate(today, lastDate)
         for (performance in allPerformance) {
-            val today = LocalDate.now()
-            val lastDate = today.plusMonths(1)
-            val startDate = performance.startDate
-            val endDate = performance.endDate
             val facilityId = performance.locationId
-
-            val dateRange = if (today >= startDate && lastDate > endDate) {
-                Pair(today, endDate)
-            } else if (today >= startDate && lastDate <= endDate) {
-                Pair(today, lastDate)
-            } else if(today < startDate && lastDate > endDate) {
-                Pair(startDate, endDate)
-            } else {
-                Pair(startDate, lastDate)
-            }
-
             val random = Random()
 
-            var currentDate = dateRange.first
-            while (currentDate != dateRange.second.plusDays(1)) {
+            var currentDate = performance.startDate
+            if (currentDate < today) {
+                currentDate = today
+            }
+            while (currentDate <= performance.endDate) {
+                if (performance.endDate > lastDate) {
+                    break
+                }
                 val concertHalls = facilityDetailRepository.findAllByFacilityId(facilityId)
-                var possibleFacilityCnt = concertHalls.size
-//                val concertHalls = facilityInstanceRepository.findFacilityInstanceByFacilityName(facilityId, currentDate)
+                val possibleFacilityCnt = concertHalls.size
                 var index = 0
-                if(possibleFacilityCnt != 1) {
+                if(possibleFacilityCnt > 1) {
                     index = random.nextInt(concertHalls.size)
                 }
                 val facilityDetail = concertHalls[index]
                 println(facilityDetail.facilityDetailId)
-                val facilityInstance = facilityInstanceRepository.findFacilityInstanceByFacilityDetailWithDate(facilityDetail, currentDate)
-                val performanceInstance = facilityInstance?.let {
-                    PerformanceInstance(
-                        performance.title,
-                        performance.uniqueId,
-                        it,
-                        facilityInstance.facilityDetail.facilityDetailName,
-                        currentDate,
-                        facilityInstance.facilityDetail.seatCnt.toLong()
-                    )
-                }
+                val facilityInstance =
+                    facilityInstanceRepository.findFacilityInstanceByFacilityDetailWithDate(facilityDetail, currentDate) ?: break
 
-                if (facilityInstance != null) {
-                    facilityInstance.availability = false
-                }
+                val performanceInstance = PerformanceInstance(
+                    performance.title,
+                    performance.uniqueId,
+                    facilityInstance,
+                    facilityInstance.facilityDetail.facilityDetailName,
+                    currentDate,
+                    facilityInstance.facilityDetail.seatCnt.toLong()
+                )
 
-                if (facilityInstance != null) {
-                    facilityInstanceRepository.save(facilityInstance)
-                }
-                if (performanceInstance != null) {
-                    performanceInstanceRepository.save(performanceInstance)
-                }
+                performanceInstanceRepository.save(performanceInstance)
+                facilityInstance.availability = false
 
                 currentDate = currentDate.plusDays(1)
             }

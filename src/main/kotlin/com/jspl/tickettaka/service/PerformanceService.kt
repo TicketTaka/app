@@ -10,7 +10,7 @@ class PerformanceService(
     private val performanceDataCrawling: PerformanceDataCrawling,
 ) {
     fun updatePerformance() {
-        performanceDataCrawling.execute()
+        performanceDataCrawling.execute("20240301", "20240401")
         performanceDataCrawling.createInstance()
     }
 }

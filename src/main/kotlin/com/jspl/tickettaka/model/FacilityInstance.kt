@@ -4,7 +4,7 @@ import jakarta.persistence.*
 import java.time.LocalDate
 
 @Entity
-@Table(name = "facility_instance")
+@Table(name = "facility_instance", indexes = [Index(name = "idx_facility_detail_id", columnList = "facility_detail_id")])
 class FacilityInstance(
     facilityDetail: FacilityDetail,
     date: LocalDate
