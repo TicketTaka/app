@@ -76,6 +76,14 @@ dependencies {
     //coroution
     implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.0")
 
+    //batch
+    implementation("org.springframework.batch:spring-batch-core:5.1.0")
+    implementation ("org.springframework.boot:spring-boot-starter-batch")
+    testImplementation("org.springframework.batch:spring-batch-test:4.3.3")
+
+    //mySQL
+    runtimeOnly("com.mysql:mysql-connector-j")
+
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")

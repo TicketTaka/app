@@ -6,7 +6,8 @@ import java.time.LocalDate
 
 @Entity
 @Table(name = "performances")
-class Performance(
+class
+Performance(
     title: String,
     uniqueId: String,
     location: String,
@@ -46,5 +47,9 @@ class Performance(
     val priceInfo:String = priceInfo
 
     @Column(name = "state")
-    val state:String = state
+    var state:String = state
+
+    fun updateState(performance: Performance) {
+        this.state = performance.state
+    }
 }

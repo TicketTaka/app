@@ -3,7 +3,7 @@ package com.jspl.tickettaka.model
 import jakarta.persistence.*
 
 @Entity
-@Table(name = "facilities")
+@Table(name = "performance_facility")
 class Facility(
     name: String,
     uniqueId: String,
@@ -18,7 +18,7 @@ class Facility(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val facilityId: Long? = null
 
-    @Column(name = "name")
+    @Column(name = "facility_name")
     val name: String = name
 
     @Column(name = "unique_id")
@@ -27,7 +27,7 @@ class Facility(
     @Column(name = "detail_count")
     val detailCnt: String = detailCnt
 
-    @Column(name = "character")
+    @Column(name = "facility_character")
     val character: String = character
 
     @Column(name = "location_1")
@@ -36,7 +36,7 @@ class Facility(
     @Column(name = "location_2")
     val gugun: String = gugun
 
-    @Column(name = "area")
+    @Column(name = "location")
     val location: String = locationDetail
 
     @Column(name = "seat_scale")

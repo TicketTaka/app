@@ -3,7 +3,7 @@ package com.jspl.tickettaka.model
 import jakarta.persistence.*
 
 @Entity
-@Table(name = "facility_details")
+@Table(name = "facility_details", indexes = [Index(name = "idx_facility_id", columnList = "facility_id")])
 class FacilityDetail(
     facilityDetailName: String,
     seatCnt: String,

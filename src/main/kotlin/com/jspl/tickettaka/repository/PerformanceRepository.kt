@@ -8,7 +8,7 @@ import java.time.LocalDate
 import java.util.Date
 
 interface PerformanceRepository:JpaRepository<Performance, Long> {
-    @Query("select p from Performance p where p.locationId = :locationId and " +
+    @Query("select p from Performance p where " +
             "p.startDate <= :endDate and p.endDate >= :startDate")
-    fun findAllByLocationId(locationId: String, startDate: LocalDate, endDate: LocalDate): List<Performance>
+    fun findAllByDate(startDate: LocalDate, endDate: LocalDate): List<Performance>
 }
