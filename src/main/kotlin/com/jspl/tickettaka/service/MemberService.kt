@@ -4,11 +4,13 @@ import com.jspl.tickettaka.dto.reqeust.LoginRequestDTO
 import com.jspl.tickettaka.dto.reqeust.SignUpRequestDTO
 import com.jspl.tickettaka.dto.response.AccessTokenResponse
 import com.jspl.tickettaka.dto.response.CheckMemberResponse
+import com.jspl.tickettaka.dto.response.TicketResponse
 import com.jspl.tickettaka.infra.jwt.JwtPlugin
 import com.jspl.tickettaka.model.Member
 import com.jspl.tickettaka.model.enums.MemberRole
 import com.jspl.tickettaka.model.toResponse
 import com.jspl.tickettaka.repository.MemberRepository
+import com.jspl.tickettaka.repository.TicketRepository
 import jakarta.transaction.Transactional
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpEntity
@@ -26,6 +28,7 @@ import org.springframework.web.client.RestTemplate
 class MemberService(
     private val memberRepository: MemberRepository,
     private val passwordEncoder: PasswordEncoder,
+    private val ticketRepository: TicketRepository,
     private val jwtPlugin: JwtPlugin
     ) {
 
@@ -73,7 +76,7 @@ class MemberService(
         params.add("redirect_uri", kakaoRedirectUri)
         params.add("code", code)
 
-
+        //String url, @Nullable Object request, Class<T> responseType, Object... uriVariables)
         val responseToken = restTemplate.postForObject(
             "https://kauth.kakao.com/oauth/token",
             params,
@@ -82,13 +85,12 @@ class MemberService(
 
         val access_token = responseToken["access_token"]
 
-
         // 사용자 정보 가져오기 요청
-        var userInfo = restTemplate.exchange(
-            "https://kapi.kakao.com/v2/user/me",
-            HttpMethod.GET,
-            HttpEntity(null, HttpHeaders().apply { set("Authorization", "Bearer $access_token") }),
-            Map::class.java
+        val userInfo = restTemplate.exchange(
+            "https://kapi.kakao.com/v2/user/me",//String url
+            HttpMethod.GET,                         //HttpMethod method,
+            HttpEntity(null, HttpHeaders().apply { set("Authorization", "Bearer $access_token") }),  //@Nullable HttpEntity<?> requestEntity
+            Map::class.java  //Class<T> responseType
         ).body!!
 
         var userNickname =  userInfo["properties"].toString()
@@ -156,6 +158,27 @@ class MemberService(
 
         return signUpMember
     }
+
+
+    fun viewMyAllTicket(member :User):TicketResponse {
+        val findTicketInfo =  ticketRepository.findByMemberId(member.username.toLong())!!
+
+        return TicketResponse(
+            memberId = member.username.toLong(),
+        //공연 회차 아이디
+            performanceInstanceId = findTicketInfo.performanceInstanceId,
+        //금액
+            priceInfo = findTicketInfo.priceInfo,
+        //좌석정보
+            setInfo = findTicketInfo.setInfo,
+        //예매된 시간
+            reservedTime = findTicketInfo.reservedTime
+        )
+
+
+    }
+
+
     private fun saveKakaoMember(kakaoId :String,userNickname:String) :CheckMemberResponse{
         val userData = Member(
             email = kakaoId,

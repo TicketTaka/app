@@ -4,6 +4,7 @@ import com.jspl.tickettaka.dto.reqeust.LoginRequestDTO
 import com.jspl.tickettaka.dto.reqeust.SignUpRequestDTO
 import com.jspl.tickettaka.dto.response.AccessTokenResponse
 import com.jspl.tickettaka.dto.response.CheckMemberResponse
+import com.jspl.tickettaka.dto.response.TicketResponse
 import com.jspl.tickettaka.infra.jwt.JwtPlugin
 import com.jspl.tickettaka.service.MemberService
 import org.springframework.http.*
@@ -45,6 +46,17 @@ class MemberController(
     fun getKakaoAccessToken(@RequestParam("code") code: String): AccessTokenResponse {
         return memberService.getKakaoAccessToken(code)
     }
+
+    @GetMapping("/ticket")
+    fun viewMyAllTicket(@AuthenticationPrincipal member: User) : ResponseEntity<TicketResponse> {
+        return ResponseEntity
+            .status(HttpStatus.OK)
+            .body(memberService.viewMyAllTicket(member))
+
+    }
+
+
+
 
     @PatchMapping("/memberRoleChange")
     fun memberRoleChange(@AuthenticationPrincipal member: User): ResponseEntity<String>{

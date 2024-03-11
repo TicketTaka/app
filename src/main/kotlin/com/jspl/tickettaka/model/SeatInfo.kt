@@ -20,11 +20,16 @@ class SeatInfo(
 
     //좌석 이름
     @Column(name = "seat_name")
-    val seat_name : String,
+    val seatName : String?,
 
+    //가격
+    @Column(name ="price")
+    val price :Int,
     //예매 가능 여부
     @Column(name = "availability")
     val availability : Boolean
+
+
 ) {
 
 }
