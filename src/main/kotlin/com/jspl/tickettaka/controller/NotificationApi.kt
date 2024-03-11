@@ -29,7 +29,7 @@ class NotificationApi(
             .map { ServerSentEvent.builder(it).build() }
 
         return Flux.interval(Duration.ofSeconds(1L)) // Test to keep connection alive
-            .map { ServerSentEvent.builder<String>().comment("Test").build() }
+            .map { ServerSentEvent.builder<String>().comment("heartbeat").build() }
             .mergeWith(messageFlux)
     }
 
