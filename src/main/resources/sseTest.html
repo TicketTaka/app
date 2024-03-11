@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>SSE Example</title>
+    <title>SSE Test</title>
 </head>
 <body>
 <div id="notifications"></div>
 
 <script>
-    const eventSource = new EventSource('/notifications/stream');
     const notificationsDiv = document.getElementById('notifications');
+    const eventSource = new EventSource('/redis/subscribe/notifications');
 
     eventSource.onmessage = function(event) {
         const newElement = document.createElement('div');

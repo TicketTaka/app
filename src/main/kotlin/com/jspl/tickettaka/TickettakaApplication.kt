@@ -21,21 +21,4 @@ class TickettakaApplication {
 
 fun main(args: Array<String>) {
     runApplication<TickettakaApplication>(*args)
-
-    val restTemplate = RestTemplate()
-    // Publish notification message to "notifications" channel
-    val message = "New notification message"
-    val publishResponse = restTemplate.postForObject(
-        "http://localhost:8080/users/redis/publish/notifications",
-        message,
-        String::class.java
-    )
-    println("Published notification message: $message")
-
-    // Subscribe to "notifications" channel
-    val subscribeResponse = restTemplate.getForObject(
-        "http://localhost:8080/users/redis/subscribe/notifications",
-        String::class.java
-    )
-    println("Subscribed to notifications channel: $subscribeResponse")
 }
