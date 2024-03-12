@@ -67,30 +67,6 @@ class PerformanceDataCrawling(
         }
     }
 
-    fun update(startDate: String, endDate: String) {
-        val allPerformance01 = fetchData(startDate, endDate, "01")
-        val allPerformance02 = fetchData(startDate, endDate, "02")
-
-        if (allPerformance01 != null && allPerformance02 != null) {
-            val allPerformances = allPerformance01 + allPerformance02
-            val existingPerformances = performanceRepository.findAll()
-
-            existingPerformances.forEach { existingPerformance ->
-                val matchingPerformance = allPerformances.find { it.uniqueId == existingPerformance.uniqueId }
-                if (matchingPerformance != null) {
-                    existingPerformance.updateState(matchingPerformance)
-                    performanceRepository.save(existingPerformance)
-                } else {
-                    performanceRepository.delete(existingPerformance)
-                }
-            }
-
-            val newPerformances = allPerformances.filter { performance ->
-                existingPerformances.none { it.uniqueId == performance.uniqueId }
-            }
-            performanceRepository.saveAll(newPerformances)
-        }
-    }
 
     @Transactional
     fun createInstance() {
