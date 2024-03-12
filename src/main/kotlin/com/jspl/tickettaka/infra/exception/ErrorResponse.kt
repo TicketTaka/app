@@ -1,2 +1,11 @@
 package com.jspl.tickettaka.infra.exception
-data class ErrorResponse(val errorMessage: String?) : RuntimeException(errorMessage)
+
+import lombok.Getter
+import lombok.Setter
+
+@Getter
+@Setter
+data class ErrorResponse(
+    val code: ApiResponseCode? = null,
+    val message: String? = null
+)

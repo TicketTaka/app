@@ -1,4 +1,4 @@
-package com.jspl.tickettaka.infra.performanceUpdateBatch
+package com.jspl.tickettaka.infra.updatePerformanceBatch
 
 import com.jspl.tickettaka.model.Performance
 import com.jspl.tickettaka.repository.PerformanceRepository

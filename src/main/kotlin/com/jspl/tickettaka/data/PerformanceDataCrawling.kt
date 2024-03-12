@@ -73,8 +73,9 @@ class PerformanceDataCrawling(
         val today = LocalDate.now()
         val lastDate = today.plusMonths(1)
         val allPerformance = performanceRepository.findAllByDate(today, lastDate)
-        for (performance in allPerformance) {
-            val facilityId = performance.locationId
+        val facilityIds = allPerformance.map { it.locationId }.toList()
+        val concertHallsList = facilityDetailRepository.findAllByFacilityIdIn(facilityIds)
+        for ((currentInx, performance) in allPerformance.withIndex()) {
             val random = Random()
 
             var currentDate = performance.startDate
@@ -85,7 +86,7 @@ class PerformanceDataCrawling(
                 if (performance.endDate > lastDate) {
                     break
                 }
-                val concertHalls = facilityDetailRepository.findAllByFacilityId(facilityId)
+                val concertHalls = concertHallsList[currentInx]
                 val possibleFacilityCnt = concertHalls.size
                 var index = 0
                 if(possibleFacilityCnt > 1) {

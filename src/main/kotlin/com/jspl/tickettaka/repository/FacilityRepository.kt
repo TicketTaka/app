@@ -16,4 +16,6 @@ interface FacilityRepository:JpaRepository<Facility, Long> {
 
     @Query("select f from Facility f where f.sido = :location1 and f.gugun = :location2")
     fun findFacilityOfLocation(location1: String, location2: String): List<Facility>
+
+    fun findByUniqueId(uniqueId: String): Facility
 }
