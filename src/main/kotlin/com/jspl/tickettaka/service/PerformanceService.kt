@@ -1,22 +1,21 @@
 package com.jspl.tickettaka.service
 
 import com.jspl.tickettaka.data.PerformanceDataCrawling
+import com.jspl.tickettaka.model.Performance
+import com.jspl.tickettaka.redis.event.PerformanceEvent
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.stereotype.Service
 
 @Service
 class PerformanceService @Autowired constructor(
     private val performanceDataCrawling: PerformanceDataCrawling,
-    private val redisTemplate: RedisTemplate<String, String>
+    private val eventPublisher: ApplicationEventPublisher
 ) {
-    fun updatePerformance(genre: String, title: String) {
+    fun updatePerformance(performance: Performance) {
         performanceDataCrawling.execute()
-
-        val channel = "genre:$genre"
-        redisTemplate.opsForList().rightPushIfPresent("channels", channel)
-
-        val message = "새로운 공연이 등록되었습니다: $title"
-        redisTemplate.convertAndSend(channel, message)
+        //공연 등록 이벤트를 발행
+        eventPublisher.publishEvent(PerformanceEvent(this, performance))
     }
 }
