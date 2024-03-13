@@ -7,13 +7,9 @@ import jakarta.persistence.*
 class FacilityDetail(
     facilityDetailName: String,
     seatCnt: String,
-//    facility: Facility
-    facilityName: String
+    facilityName: String,
+    facilityId: String
 ) {
-
-//    init {
-//        facility.addFacilityDetail(this)
-//    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,4 +26,14 @@ class FacilityDetail(
 //    val facility: Facility = facility
     @Column(name = "facility_name")
     val facilityName: String = facilityName
+
+    @Column(name = "facility_id")
+    val facilityId: String = facilityId
+
+    @OneToMany(mappedBy = "facilityDetail", cascade = [CascadeType.REMOVE])
+    var instanceList: MutableList<FacilityInstance> = mutableListOf()
+
+    fun addInstance(facilityInstance: FacilityInstance) {
+        instanceList.add(facilityInstance)
+    }
 }

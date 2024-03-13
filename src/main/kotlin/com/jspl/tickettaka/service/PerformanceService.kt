@@ -14,7 +14,8 @@ class PerformanceService @Autowired constructor(
     private val eventPublisher: ApplicationEventPublisher
 ) {
     fun updatePerformance(performance: Performance) {
-        performanceDataCrawling.execute()
+        performanceDataCrawling.execute("20240301", "20240401")
+        performanceDataCrawling.createInstance()
         //공연 등록 이벤트를 발행
         eventPublisher.publishEvent(PerformanceEvent(this, performance))
     }

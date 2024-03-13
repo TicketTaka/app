@@ -2,27 +2,25 @@ package com.jspl.tickettaka.data
 
 import com.jspl.tickettaka.model.Facility
 import com.jspl.tickettaka.model.FacilityDetail
-import com.jspl.tickettaka.model.Performance
+import com.jspl.tickettaka.model.FacilityInstance
 import com.jspl.tickettaka.repository.FacilityDetailRepository
+import com.jspl.tickettaka.repository.FacilityInstanceRepository
 import com.jspl.tickettaka.repository.FacilityRepository
-import kotlinx.coroutines.asCoroutineDispatcher
-import kotlinx.coroutines.async
-import kotlinx.coroutines.runBlocking
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
-import org.jsoup.select.Elements
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import java.net.URL
-import java.net.URLEncoder
-import java.util.concurrent.Executors
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 @Component
 class FacilityDataCrawling(
     private val facilityRepository: FacilityRepository,
-//    private val facilityDetailRepository: FacilityDetailRepository
+    private val facilityDetailRepository: FacilityDetailRepository,
+    private val facilityInstanceRepository: FacilityInstanceRepository,
 
     @Value("\${data.secret.key}")
     private val secretKey: String
@@ -35,84 +33,63 @@ class FacilityDataCrawling(
             "service" to serviceKey,
             "cpage" to "1",
             "rows" to "3000",
-            "fcltychartr" to "1"
-        )
-        val params2 = mapOf(
-            "service" to serviceKey,
-            "cpage" to "1",
-            "rows" to "3000",
-            "fcltychartr" to "2"
-        )
-        val params3 = mapOf(
-            "service" to serviceKey,
-            "cpage" to "1",
-            "rows" to "3000",
-            "fcltychartr" to "3"
         )
 
         val xmlData1 = sendGetRequest(firstApiUrl, params1)
-        val xmlData2 = sendGetRequest(firstApiUrl, params2)
-        val xmlData3 = sendGetRequest(firstApiUrl, params3)
 
         val allFacilities = mutableListOf<Facility>()
 
-        if (xmlData1 != null && xmlData2 != null && xmlData3 != null) {
-            val mt10id01 = parseXmlForMt10id(xmlData1)
-            val mt10id02 = parseXmlForMt10id(xmlData2)
-            val mt10id03 = parseXmlForMt10id(xmlData3)
+        if (xmlData1 != null) {
+            val mt10idsWithLocation = parseXmlForMt10idAndLocation(xmlData1)
 
-            val mt10ids = mt10id01 + mt10id02 + mt10id03
-
-            mt10ids.forEach { mt10id ->
+            mt10idsWithLocation.forEach { (mt10id, location1, location2) ->
                 val secondApiUrl = "https://kopis.or.kr/openApi/restful/prfplc/$mt10id"
                 val secondApiParams = mapOf("service" to serviceKey, "newsql" to "Y")
                 val secondApiResponse = sendGetRequest(secondApiUrl, secondApiParams)
 
-                extractAndProcessData(secondApiResponse)?.let { allFacilities.add(it) }
+                extractAndProcessData(secondApiResponse, location1, location2)?.let { allFacilities.add(it) }
             }
         } else {
             println("Failed to fetch XML data from the first API.")
         }
 
+        println(allFacilities.size)
+
         facilityRepository.saveAll(allFacilities)
     }
 
-//    @Transactional
-//    fun fetchAndProcessFacilitiesDetail() = runBlocking {
-//        val serviceKey = secretKey
-//        val facilityNames = facilityRepository.findAllNames()
-//        println(facilityNames.size)
-//
-//        val dispatcher = Executors.newFixedThreadPool(10).asCoroutineDispatcher() // 적절한 스레드 풀 크기 조정
-//
-//        val jobs = facilityNames.map { name ->
-//            if (!name.contains(" ") && !name.contains("[") && !name.contains("]") && !name.contains("(") && !name.contains(")")) {
-//                async(dispatcher) {
-//                    println(name)
-//                    val secondApiUrl = "https://kopis.or.kr/openApi/restful/prfstsPrfByFct"
-//                    val secondApiParams = mapOf(
-//                        "service" to serviceKey,
-//                        "cpage" to "1",
-//                        "rows" to "20",
-//                        "stdate" to "20230101",
-//                        "eddate" to "20240226",
-//                        "shprfnmfct" to name,
-//                        "newsql" to "Y"
-//                    )
-//                    val secondApiResponse = sendGetRequest(secondApiUrl, secondApiParams)
-//                    extractAndProcessDetailData(secondApiResponse)
-//                }
-//            } else {
-//                null
-//            }
-//        }
-//
-//        val facilityDetailsList = jobs.flatMap { it?.await() ?: emptyList() }
-//
-//        facilityDetailRepository.saveAll(facilityDetailsList)
-//
-//        dispatcher.close()
-//    }
+    @Transactional
+    fun createConcertHall() {
+        facilityRepository.findAll().forEach { facility ->
+            val facilityHallNum = facility.detailCnt.toInt()
+            val seatCnt = if (facilityHallNum != 0) facility.seatScale.toInt() / facilityHallNum else 0
+            val halls = if (facilityHallNum != 1) (1..facilityHallNum).map { "${it}관" } else listOf("본관")
+
+            val concertHalls = halls.map { hall ->
+                FacilityDetail(hall, seatCnt.toString(), facility.name, facility.uniqueId)
+            }
+
+            facilityDetailRepository.saveAll(concertHalls)
+        }
+    }
+
+    @Transactional
+    fun createInstance() {
+        val allFacilityDetail = facilityDetailRepository.findAll()
+        var today: LocalDate = LocalDate.now()
+        val endDate: LocalDate = today.plusMonths(1)
+
+        while (today != endDate) {
+            val formattedDate = today.format(DateTimeFormatter.ofPattern("yyyy.MM.dd"))
+            val parsedDate = LocalDate.parse(formattedDate, DateTimeFormatter.ofPattern("yyyy.MM.dd"))
+
+            for (facilityDetail in allFacilityDetail) {
+                val facilityInstance = FacilityInstance(facilityDetail, parsedDate)
+                facilityInstanceRepository.save(facilityInstance)
+            }
+            today = today.plusDays(1)
+        }
+    }
 
     private fun sendGetRequest(url: String, params: Map<String, String>): String? {
         val urlBuilder = StringBuilder(url)
@@ -134,18 +111,24 @@ class FacilityDataCrawling(
         }
     }
 
-    private fun parseXmlForMt10id(xmlData: String): List<String> {
+    private fun parseXmlForMt10idAndLocation(xmlData: String): List<Triple<String, String, String>> {
         val doc: Document = Jsoup.parse(xmlData)
-        val mt10ids = mutableListOf<String>()
+        val mt10idsWithLocation: MutableList<Triple<String, String, String>> = mutableListOf()
         val elements: List<Element> = doc.select("mt10id")
+        val location1: List<Element> = doc.select("sidonm")
+        val location2: List<Element> = doc.select("gugunnm")
 
-        for (element in elements) {
-            mt10ids.add(element.text())
+        for (i in elements.indices) {
+            val mt10id = elements[i].text()
+            val sidonm = if (i < location1.size) location1[i].text() else ""
+            val gugunnm = if (i < location2.size) location2[i].text() else ""
+
+            mt10idsWithLocation.add(Triple(mt10id, sidonm, gugunnm))
         }
-        return mt10ids
+        return mt10idsWithLocation
     }
 
-    private fun extractAndProcessData(xmlData: String?): Facility? {
+    private fun extractAndProcessData(xmlData: String?, location1: String, location2: String): Facility? {
         if (xmlData != null) {
             val doc: Document = Jsoup.parse(xmlData)
             val fcltynm = doc.selectFirst("fcltynm")?.text()
@@ -155,12 +138,17 @@ class FacilityDataCrawling(
             val adres = doc.selectFirst("adres")?.text()
             val seatscale = doc.selectFirst("seatscale")?.text()
 
+            val pattern = "\\s*\\(.*?\\)".toRegex()
+            val replaceName = fcltynm?.replace(pattern, "")
+
             return Facility(
-                name = fcltynm ?: "",
+                name = replaceName ?: "",
                 uniqueId = mt10id ?: "",
                 detailCnt = mt13cnt ?: "",
                 character = fcltychartr ?: "",
-                location = adres ?: "",
+                sido = location1,
+                gugun = location2,
+                locationDetail = adres ?: "",
                 seatScale = seatscale ?: ""
             )
         } else {
@@ -169,32 +157,4 @@ class FacilityDataCrawling(
         return null
     }
 
-//    private fun extractAndProcessDetailData(xmlData: String?): List<FacilityDetail> {
-//        val facilityDetails = mutableListOf<FacilityDetail>()
-//
-//        if (xmlData != null) {
-//            val doc: Document = Jsoup.parse(xmlData)
-//            val prfstElements = doc.select("prfst")
-//
-//            for (prfstElement in prfstElements) {
-//                val prfnmplc = prfstElement.selectFirst("prfnmplc")?.text()
-//                val seatcnt = prfstElement.selectFirst("seatcnt")?.text()
-//                val prfnmfct = prfstElement.selectFirst("prfnmfct")?.text()
-//
-//                if (!prfnmplc.isNullOrBlank() && !seatcnt.isNullOrBlank() && !prfnmfct.isNullOrBlank()) {
-//                    facilityDetails.add(
-//                        FacilityDetail(
-//                            facilityDetailName = prfnmplc,
-//                            seatCnt = seatcnt,
-//                            facilityName = prfnmfct
-//                        )
-//                    )
-//                }
-//            }
-//        } else {
-//            println("Failed to fetch XML data from the second API.")
-//        }
-//
-//        return facilityDetails
-//    }
 }
