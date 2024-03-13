@@ -67,38 +67,15 @@ class PerformanceDataCrawling(
         }
     }
 
-    fun update(startDate: String, endDate: String) {
-        val allPerformance01 = fetchData(startDate, endDate, "01")
-        val allPerformance02 = fetchData(startDate, endDate, "02")
-
-        if (allPerformance01 != null && allPerformance02 != null) {
-            val allPerformances = allPerformance01 + allPerformance02
-            val existingPerformances = performanceRepository.findAll()
-
-            existingPerformances.forEach { existingPerformance ->
-                val matchingPerformance = allPerformances.find { it.uniqueId == existingPerformance.uniqueId }
-                if (matchingPerformance != null) {
-                    existingPerformance.updateState(matchingPerformance)
-                    performanceRepository.save(existingPerformance)
-                } else {
-                    performanceRepository.delete(existingPerformance)
-                }
-            }
-
-            val newPerformances = allPerformances.filter { performance ->
-                existingPerformances.none { it.uniqueId == performance.uniqueId }
-            }
-            performanceRepository.saveAll(newPerformances)
-        }
-    }
 
     @Transactional
     fun createInstance() {
         val today = LocalDate.now()
         val lastDate = today.plusMonths(1)
         val allPerformance = performanceRepository.findAllByDate(today, lastDate)
-        for (performance in allPerformance) {
-            val facilityId = performance.locationId
+        val facilityIds = allPerformance.map { it.locationId }.toList()
+        val concertHallsList = facilityDetailRepository.findAllByFacilityIdIn(facilityIds)
+        for ((currentInx, performance) in allPerformance.withIndex()) {
             val random = Random()
 
             var currentDate = performance.startDate
@@ -109,7 +86,7 @@ class PerformanceDataCrawling(
                 if (performance.endDate > lastDate) {
                     break
                 }
-                val concertHalls = facilityDetailRepository.findAllByFacilityId(facilityId)
+                val concertHalls = concertHallsList[currentInx]
                 val possibleFacilityCnt = concertHalls.size
                 var index = 0
                 if(possibleFacilityCnt > 1) {
