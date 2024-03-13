@@ -17,7 +17,7 @@ class Member(
     val email:String,
 
     @Column(name = "username")
-    val username:String,
+    var username:String,
 
     @Column(name = "password")
     val password : String?,
