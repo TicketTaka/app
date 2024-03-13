@@ -48,30 +48,25 @@ class MemberController(
     }
 
     @GetMapping("/ticket")
-    fun viewMyAllTicket(@AuthenticationPrincipal member: User) : ResponseEntity<TicketResponse> {
+    fun viewMyAllTicket(@AuthenticationPrincipal member: User) : ResponseEntity<List<TicketResponse>> {
         return ResponseEntity
             .status(HttpStatus.OK)
             .body(memberService.viewMyAllTicket(member))
-
     }
 
-
-
-
-    @PatchMapping("/memberRoleChange")
-    fun memberRoleChange(@AuthenticationPrincipal member: User): ResponseEntity<String>{
-        return ResponseEntity.status(HttpStatus.OK).body(memberService.memberRoleChange(member))
-    }
-
+//    @PatchMapping("/memberRoleChange")
+//    fun memberRoleChange(@AuthenticationPrincipal member: User): ResponseEntity<String>{
+//        return ResponseEntity.status(HttpStatus.OK).body(memberService.memberRoleChange(member))
+//    }
     @GetMapping("/test/viewAllUserData")
     fun allViewUserData():ResponseEntity<List<CheckMemberResponse>> {
         return ResponseEntity.status(HttpStatus.OK).body(memberService.viewAllMemberData())
     }
-
-    @PreAuthorize("hasAnyAuthority('TempNameConsumer')")
-    @GetMapping("/test/checkMyPKValue")
-    fun test(@AuthenticationPrincipal member: User):String {
-        return member.username
-    }
+//
+//    @PreAuthorize("hasAnyAuthority('TempNameConsumer')")
+//    @GetMapping("/test/checkMyPKValue")
+//    fun test(@AuthenticationPrincipal member: User):String {
+//        return member.username
+//    }
 
 }

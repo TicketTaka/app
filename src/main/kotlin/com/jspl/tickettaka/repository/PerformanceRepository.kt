@@ -11,4 +11,6 @@ interface PerformanceRepository:JpaRepository<Performance, Long> {
     @Query("select p from Performance p where " +
             "p.startDate <= :endDate and p.endDate >= :startDate")
     fun findAllByDate(startDate: LocalDate, endDate: LocalDate): List<Performance>
+
+    fun findByUniqueId(uniqueId :String):Performance
 }

@@ -5,6 +5,7 @@ import com.jspl.tickettaka.dto.reqeust.SignUpRequestDTO
 import com.jspl.tickettaka.dto.response.AccessTokenResponse
 import com.jspl.tickettaka.dto.response.CheckMemberResponse
 import com.jspl.tickettaka.dto.response.TicketResponse
+import com.jspl.tickettaka.infra.exception.ModelNotFoundException
 import com.jspl.tickettaka.infra.jwt.JwtPlugin
 import com.jspl.tickettaka.model.Member
 import com.jspl.tickettaka.model.enums.MemberRole
@@ -22,6 +23,7 @@ import org.springframework.stereotype.Service
 import org.springframework.util.LinkedMultiValueMap
 import org.springframework.util.MultiValueMap
 import org.springframework.web.client.RestTemplate
+import kotlin.jvm.Throws
 
 @Service
 @Transactional
@@ -30,7 +32,7 @@ class MemberService(
     private val passwordEncoder: PasswordEncoder,
     private val ticketRepository: TicketRepository,
     private val jwtPlugin: JwtPlugin
-    ) {
+) {
 
     val kakaoClientId = "60ffdbd138489440034b2e2bb1f592e3"
     val kakaoRedirectUri = "http://localhost:8080/api/members/getKakaoAccessToken"
@@ -52,11 +54,11 @@ class MemberService(
         return MappingMember
     }
 
-    fun login(request:LoginRequestDTO):AccessTokenResponse{
+    fun login(request: LoginRequestDTO): AccessTokenResponse {
         val (email, password) = request
         val foundMember = findByEmail(email)
 
-        if (foundMember == null && passwordEncoder.matches(password,foundMember)) {
+        if (foundMember == null && passwordEncoder.matches(password, foundMember)) {
             throw IllegalArgumentException("Email 또는 Password 가 잘못 입력되었습니다")
         }
 
@@ -68,7 +70,7 @@ class MemberService(
         return AccessTokenResponse(data)
     }
 
-    fun getKakaoAccessToken(code :String):AccessTokenResponse{
+    fun getKakaoAccessToken(code: String): AccessTokenResponse {
         val restTemplate = RestTemplate()
         val params: MultiValueMap<String, String> = LinkedMultiValueMap()
         params.add("grant_type", "authorization_code")
@@ -89,25 +91,32 @@ class MemberService(
         val userInfo = restTemplate.exchange(
             "https://kapi.kakao.com/v2/user/me",//String url
             HttpMethod.GET,                         //HttpMethod method,
-            HttpEntity(null, HttpHeaders().apply { set("Authorization", "Bearer $access_token") }),  //@Nullable HttpEntity<?> requestEntity
+            HttpEntity(
+                null,
+                HttpHeaders().apply {
+                    set(
+                        "Authorization",
+                        "Bearer $access_token"
+                    )
+                }),  //@Nullable HttpEntity<?> requestEntity
             Map::class.java  //Class<T> responseType
         ).body!!
 
-        var userNickname =  userInfo["properties"].toString()
+        var userNickname = userInfo["properties"].toString()
 
         userNickname = userNickname
-            .replace("{","")
-            .replace("}","")
+            .replace("{", "")
+            .replace("}", "")
             .split("=").get(1)
 
         var kakaoId = userInfo["id"].toString()
 
         kakaoId = kakaoId
-            .replace("{","")
-            .replace("}","")
+            .replace("{", "")
+            .replace("}", "")
             .split("=").get(0)
 
-        val foundMember = saveKakaoMember(kakaoId,userNickname)
+        val foundMember = saveKakaoMember(kakaoId, userNickname)
 
         val data = jwtPlugin.generateAccessToken(
             subject = foundMember.id.toString(),
@@ -118,10 +127,10 @@ class MemberService(
         return AccessTokenResponse(data)
     }
 
-    fun memberRoleChange(member :User):String  {
-         val memberInfo = findByMemberId(member)
+    fun memberRoleChange(member: User): String {
+        val memberInfo = findByMemberId(member)
 
-        memberInfo.role =  when (memberInfo.role.name) {
+        memberInfo.role = when (memberInfo.role.name) {
             "TempNameProducer" -> MemberRole.TempNameConsumer
             "TempNameConsumer" -> MemberRole.TempNameProducer
             else -> throw IllegalArgumentException("잘못된 접근입니다")
@@ -133,15 +142,15 @@ class MemberService(
 
 
     //임시 데이터 뷰
-    fun viewAllMemberData():List<CheckMemberResponse> {
-        return  memberRepository.findAll().map { it.toResponse() }
+    fun viewAllMemberData(): List<CheckMemberResponse> {
+        return memberRepository.findAll().map { it.toResponse() }
     }
 
-    private fun saveMember(request:SignUpRequestDTO):Member{
+    private fun saveMember(request: SignUpRequestDTO): Member {
         val (email, username, password, role) = request
         val emailRegularExpression = "^[a-zA-Z0-9]+@[a-zA-Z0-9-]+.com$"
 
-        if(!emailRegularExpression.toRegex().matches(email)){
+        if (!emailRegularExpression.toRegex().matches(email)) {
             throw IllegalArgumentException("이메일 형식이 맞지 않습니다")
         }
 
@@ -159,47 +168,52 @@ class MemberService(
         return signUpMember
     }
 
-
-    fun viewMyAllTicket(member :User):TicketResponse {
-        val findTicketInfo =  ticketRepository.findByMemberId(member.username.toLong())!!
-
-        return TicketResponse(
-            memberId = member.username.toLong(),
-        //공연 회차 아이디
-            performanceInstanceId = findTicketInfo.performanceInstanceId,
-        //금액
-            priceInfo = findTicketInfo.priceInfo,
-        //좌석정보
-            setInfo = findTicketInfo.setInfo,
-        //예매된 시간
-            reservedTime = findTicketInfo.reservedTime
-        )
-
-
+    //임시 유저이름 바꾸기
+    fun changeNameTest(memberUserName :String,changeUserName :String){
+        val data = memberRepository.findByUsername(memberUserName)
+        data.username = changeUserName
     }
 
+    //
+    fun viewMyAllTicket(member: User): List<TicketResponse> {
+        val findTicketInfo = ticketRepository.findByMemberId(member.username.toLong())
+            ?: throw ModelNotFoundException("Ticket", member.username.toLong())
+        return findTicketInfo.map { it.toResponse() }
+    }
 
-    private fun saveKakaoMember(kakaoId :String,userNickname:String) :CheckMemberResponse{
-        val userData = Member(
-            email = kakaoId,
-            username = userNickname,
-            password = null,
-            role = MemberRole.TempNameConsumer
-        )
+    fun viewMyAllTicketTest(memberId: Long): List<TicketResponse> {
+        val findTicketInfo = ticketRepository.findByMemberId(memberId)
+            ?: throw ModelNotFoundException("Ticket", memberId)
+        return findTicketInfo.map { it.toResponse() }
+    }
 
+    private fun saveKakaoMember(kakaoId: String, userNickname: String): CheckMemberResponse {
+        val memberInfo  = findByEmail(kakaoId)
 
-       return  memberRepository.save(userData).toResponse()
+        if(memberInfo != null){
+            return memberInfo.toResponse()
+        } else {
+            val userData = Member(
+                email = kakaoId,
+                username = userNickname,
+                password = null,
+                role = MemberRole.TempNameConsumer
+            )
+            return memberRepository.save(userData).toResponse()
+        }
     }
 
     private fun findByEmail(email: String): Member? {
         return memberRepository.findByEmail(email)
     }
 
-    private fun findByMemberId(member: User):Member {
+    private fun findByMemberId(member: User): Member {
         //추후 null 생각하기
-        return memberRepository.findByIdOrNull(member.username.toLong())!!
-    }
+        val findMemmber = memberRepository.findByIdOrNull(member.username.toLong())
+            ?: throw ModelNotFoundException("Member", member.username.toLong())
 
+        return findMemmber
+    }
 
 
 }
