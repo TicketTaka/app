@@ -1,12 +1,14 @@
 package com.jspl.tickettaka.controller
 
 import com.jspl.tickettaka.dto.reqeust.TicketRequestDTO
+import com.jspl.tickettaka.dto.response.TempPerfomanceDate
 import com.jspl.tickettaka.model.SeatInfo
 import com.jspl.tickettaka.repository.PerformanceInstanceRepository
 import com.jspl.tickettaka.repository.SeatInfoRepository
 import com.jspl.tickettaka.repository.TicketRepository
 import com.jspl.tickettaka.service.TicketService
 import org.springframework.data.repository.findByIdOrNull
+import org.springframework.http.HttpEntity
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatusCode
 import org.springframework.http.ResponseEntity
@@ -31,27 +33,26 @@ class TicketController(
 ) {
 
     //좌석 만들기
-    @PostMapping("/makeSeat")
+    @PostMapping("/makeSeat(좌석만들기)")
     fun makeSeat(@RequestParam performanceInstanceId :Long) {
          ticketService.makeSeat(performanceInstanceId)
     }
 
     //에약 가능한 좌석 전부 보기
-    @GetMapping("/viewSeatInfo")
-    fun viewSeatInfo(@RequestParam performanceInstanceId: Long):ResponseEntity<List<Int>> {
+    @GetMapping("/viewSeatInfo(예약 가능한 좌석보기)")
+    fun viewSeatInfo(@RequestParam performanceInstanceId: Long):ResponseEntity<List<String>> {
         return ResponseEntity
             .status(HttpStatus.OK)
             .body(ticketService.viewAllSeatInfo(performanceInstanceId))
     }
 
     //예약된 좌석 전부 보기
-    @GetMapping("/viewSeatResInfo")
+    @GetMapping("/viewSeatResInfo(예약된 좌석보기)")
     fun viewSeatResInfo(@RequestParam performanceInstanceId: Long):ResponseEntity<List<Int>> {
         return ResponseEntity
             .status(HttpStatus.OK)
             .body(ticketService.viewAllSeatResInfo(performanceInstanceId))
     }
-
 
     //하나의 좌석 정보 보기
     @GetMapping("{id}")
@@ -61,46 +62,49 @@ class TicketController(
             .body(ticketService.viewOneSeatInfo(id))
     }
 
-
-
     //티켓 예약하기
-    @PostMapping("/ticketing")
+    @PostMapping("/ticketing(예약 하기)")
     fun ticketing(@AuthenticationPrincipal member:User,@RequestParam seatId:Long):ResponseEntity<String> {
+        val memberId = member.username.toLong()
         return ResponseEntity
             .status(HttpStatus.OK)
-            .body(ticketService.ticketing(member,seatId))
+            .body(ticketService.ticketing(memberId,seatId))
     }
 
-    @GetMapping("/viewAllSeatDetailInfo")
+    @GetMapping("/viewAllSeatDetailInfo(예약된 좌석상세 확인)")
     fun viewAllSeatDetailInfo(@RequestParam performanceInstanceId :Long) :ResponseEntity<List<String>>{
         return ResponseEntity
             .status(HttpStatus.OK)
             .body(ticketService.viewAllSeatDetailInfo(performanceInstanceId))
     }
 
-
     //티켓 변경하기
-//    @PutMapping("/{id}")
-//    fun updateTicket(@PathVariable id:Long,):ResponseEntity<String>{
-//        return ResponseEntity
-//            .status(HttpStatus.OK)
-//            .body(ticketService.)
-//    }
-
+    @PutMapping("/{ticketId}/(예약 변경하기)")
+    fun updateTicket(@AuthenticationPrincipal member: User,@PathVariable ticketId:Long,@RequestParam seatId: Long):ResponseEntity<String>{
+        val memberId = member.username.toLong()
+        return ResponseEntity
+            .status(HttpStatus.OK)
+            .body(ticketService.rescheduleTicket(memberId,ticketId,seatId))
+    }
 
     //티켓 취소하기
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id}/(예약 취소하기)")
     fun cancleTicket(@PathVariable id :Long):ResponseEntity<String >{
         return ResponseEntity
             .status(HttpStatus.OK)
             .body(ticketService.cancelTicket(id))
     }
 
-    @DeleteMapping("/{id}/test")
+
+    //같은 행사 다른 날짜 확인하기
+    @GetMapping("/checkPerformance(같은 행사 다른 날짜 확인하기)")
+    fun performanceInstanceCheck(@RequestParam id:Long) :ResponseEntity<List<TempPerfomanceDate>>{
+        return ResponseEntity.status(HttpStatus.OK).body(ticketService.performanceInstanceCheck(id))
+//        ticketService.performanceInstanceCheck(id)
+    }
+
+    @DeleteMapping("/{id}/test/(한 유저의 모든 티켓 취소하기)")
     fun cancleTicketTest(@PathVariable id :Long){
        ticketService.cancelTicketTest(id)
     }
-
-
-
 }

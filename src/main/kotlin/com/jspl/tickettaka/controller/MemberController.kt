@@ -36,6 +36,16 @@ class MemberController(
             .status(HttpStatus.OK)
             .body(memberService.login(loginRequestDTO))
     }
+
+    @DeleteMapping("/delete(회원탈퇴)")
+    fun delete(@AuthenticationPrincipal member :User):ResponseEntity<Unit>{
+        val memberId = member.username.toLong()
+        return ResponseEntity
+            .status(HttpStatus.NO_CONTENT)
+            .body(memberService.deleteMember(memberId))
+    }
+
+
     @GetMapping("/kakaologin")
     fun kakaoLogin(): RedirectView {
         val kakaoLoginUrl = "https://kauth.kakao.com/oauth/authorize?client_id=$kakaoClientId&redirect_uri=$kakaoRedirectUri&response_type=code"
@@ -47,22 +57,27 @@ class MemberController(
         return memberService.getKakaoAccessToken(code)
     }
 
-    @GetMapping("/ticket")
+    @GetMapping("/ticket(나의 예약한 티켓보기)")
     fun viewMyAllTicket(@AuthenticationPrincipal member: User) : ResponseEntity<List<TicketResponse>> {
+        val memberId = member.username.toLong()
         return ResponseEntity
             .status(HttpStatus.OK)
-            .body(memberService.viewMyAllTicket(member))
+            .body(memberService.viewMyAllTicket(memberId))
+    }
+
+    @GetMapping("/test/viewAllUserData(회원가입한 유저들 확인)")
+    fun allViewUserData():ResponseEntity<List<CheckMemberResponse>> {
+        return ResponseEntity
+            .status(HttpStatus.OK)
+            .body(memberService.viewAllMemberData())
     }
 
 //    @PatchMapping("/memberRoleChange")
 //    fun memberRoleChange(@AuthenticationPrincipal member: User): ResponseEntity<String>{
-//        return ResponseEntity.status(HttpStatus.OK).body(memberService.memberRoleChange(member))
+//        return ResponseEntity
+//        .status(HttpStatus.OK)
+//        .body(memberService.memberRoleChange(member))
 //    }
-    @GetMapping("/test/viewAllUserData")
-    fun allViewUserData():ResponseEntity<List<CheckMemberResponse>> {
-        return ResponseEntity.status(HttpStatus.OK).body(memberService.viewAllMemberData())
-    }
-//
 //    @PreAuthorize("hasAnyAuthority('TempNameConsumer')")
 //    @GetMapping("/test/checkMyPKValue")
 //    fun test(@AuthenticationPrincipal member: User):String {

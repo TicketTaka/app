@@ -31,6 +31,7 @@ class MemberService(
     private val memberRepository: MemberRepository,
     private val passwordEncoder: PasswordEncoder,
     private val ticketRepository: TicketRepository,
+    private val ticketService: TicketService,
     private val jwtPlugin: JwtPlugin
 ) {
 
@@ -127,8 +128,8 @@ class MemberService(
         return AccessTokenResponse(data)
     }
 
-    fun memberRoleChange(member: User): String {
-        val memberInfo = findByMemberId(member)
+    fun memberRoleChange(memberId : Long): String {
+        val memberInfo = findByMemberId(memberId)
 
         memberInfo.role = when (memberInfo.role.name) {
             "TempNameProducer" -> MemberRole.TempNameConsumer
@@ -168,20 +169,23 @@ class MemberService(
         return signUpMember
     }
 
-    //임시 유저이름 바꾸기
-    fun changeNameTest(memberUserName :String,changeUserName :String){
-        val data = memberRepository.findByUsername(memberUserName)
-        data.username = changeUserName
+    //회원삭제
+    fun deleteMember(memberId :Long){
+        val memeberInfo = findByMemberId(memberId)
+
+        val ticketInfo = ticketRepository.findByMemberId(memberId)
+
+        if(ticketInfo != null){
+            val ticketId = ticketInfo.map { it.id }
+            for(t in ticketId){
+                ticketService.cancelTicket(t!!)
+            }
+        }
+
+        memberRepository.delete(memeberInfo)
     }
 
-    //
-    fun viewMyAllTicket(member: User): List<TicketResponse> {
-        val findTicketInfo = ticketRepository.findByMemberId(member.username.toLong())
-            ?: throw ModelNotFoundException("Ticket", member.username.toLong())
-        return findTicketInfo.map { it.toResponse() }
-    }
-
-    fun viewMyAllTicketTest(memberId: Long): List<TicketResponse> {
+    fun viewMyAllTicket(memberId: Long): List<TicketResponse> {
         val findTicketInfo = ticketRepository.findByMemberId(memberId)
             ?: throw ModelNotFoundException("Ticket", memberId)
         return findTicketInfo.map { it.toResponse() }
@@ -207,10 +211,10 @@ class MemberService(
         return memberRepository.findByEmail(email)
     }
 
-    private fun findByMemberId(member: User): Member {
+    private fun findByMemberId(memberId: Long): Member {
         //추후 null 생각하기
-        val findMemmber = memberRepository.findByIdOrNull(member.username.toLong())
-            ?: throw ModelNotFoundException("Member", member.username.toLong())
+        val findMemmber = memberRepository.findByIdOrNull(memberId)
+            ?: throw ModelNotFoundException("Member", memberId)
 
         return findMemmber
     }

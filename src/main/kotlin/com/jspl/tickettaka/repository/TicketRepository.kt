@@ -7,4 +7,6 @@ interface TicketRepository:JpaRepository<Ticket,Long> {
     fun findByMemberId(id : Long) : List<Ticket>?
 
     fun findBySeatId(id :Long) :Ticket
+
+    fun findByPerformanceInstanceId(id:Long):Ticket
 }

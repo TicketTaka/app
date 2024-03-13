@@ -2,7 +2,9 @@ package com.jspl.tickettaka
 
 
 import com.jspl.tickettaka.dto.reqeust.SignUpRequestDTO
+import com.jspl.tickettaka.infra.exception.ModelNotFoundException
 import com.jspl.tickettaka.model.Member
+import com.jspl.tickettaka.model.enums.MemberRole
 import com.jspl.tickettaka.repository.MemberRepository
 import com.jspl.tickettaka.service.MemberService
 import com.jspl.tickettaka.service.TicketService
@@ -58,38 +60,87 @@ class SeatCheackTest(
     }
 
     @Test
+    fun 가입된회원조회(){
+       val test = memberService.viewAllMemberData()
+
+        for(i in test){
+            println(i.id)
+            println(i.email)
+            println(i.username)
+            println()
+        }
+    }
+
+    @Test
+    fun 일괄회원삭제(){
+        val allMemberId = memberRepository.findAll().map { it.id }
+        for(m in allMemberId){
+           val findMember =memberRepository.findByIdOrNull(m)!!
+            memberRepository.delete(findMember)
+        }
+    }
+
+    @Test
     fun 좌석수확인(){
 
-        val memberInfo = memberRepository.findByIdOrNull(1)!!.id!!
+        val allMemberInfo = memberRepository.findAll()
+        val memberIdList :MutableList<Long> = mutableListOf()
+        var count = 0
+
+        while(allMemberInfo.size <4) {
+            val data = Member(
+                email = "temp" +count +"@naver.com",
+                password = "string",
+                username =  "username" +count,
+                role = MemberRole.TempNameConsumer
+            )
+
+            val memberEmail = memberRepository.findByEmail(data.email)
+            if(memberEmail == null){
+                memberRepository.save(data)
+            }
+
+            count++
+
+
+        }
+
+        for(m in allMemberInfo){
+            memberIdList.add(m.id!!)
+        }
+
+        val memberInfo = memberRepository.findByIdOrNull(memberIdList[0])!!.id!!
+        val member2Info = memberRepository.findByIdOrNull(memberIdList[1])!!.id!!
+        val member3Info = memberRepository.findByIdOrNull(memberIdList[2])!!.id!!
+        val member4Info = memberRepository.findByIdOrNull(memberIdList[3])!!.id!!
+
 
         val executors = Executors.newFixedThreadPool(4)
 
         val latch = CountDownLatch(4)
 
         executors.execute {
-            val as1 = ticketService.ticketingTest(memberInfo, 100)
+            ticketService.ticketing(memberInfo, 100)
             latch.countDown()
         }
 
         executors.execute {
-            val as2 = ticketService.ticketingTest(memberInfo, 100)
+            ticketService.ticketing(member2Info, 100)
             latch.countDown()
         }
 
         executors.execute {
-            val as3 = ticketService.ticketingTest(memberInfo, 100)
+            ticketService.ticketing(member3Info, 100)
             latch.countDown()
         }
 
         executors.execute {
-            val as4 = ticketService.ticketingTest(memberInfo, 100)
+            ticketService.ticketing(member4Info, 100)
             latch.countDown()
         }
         latch.await()  // 일괄 종료시점을 맞추는 로직?
 
-
-
-         val myTicketInfo = memberService.viewMyAllTicketTest(1)
+         val myTicketInfo = memberService.viewMyAllTicket(1)
 
         println("========================================")
         println("========================================")

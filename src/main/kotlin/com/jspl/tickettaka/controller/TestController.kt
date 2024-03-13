@@ -160,16 +160,16 @@ class TestController(
 
 
 
-    @GetMapping("/seatInfoRepository")
-    fun test3(@RequestParam test1 :Long){
-        val data = seatInfoRepository.findByIdOrNull(test1)!!
-        println("============seatInfoRepository============")
+//    @GetMapping("/seatInfoRepository")
+//    fun test3(@RequestParam test1 :Long){
+//        val data = seatInfoRepository.findByIdOrNull(test1)!!
+//        println("============seatInfoRepository============")
 //        println(data.id)
 //        println(data.price)
 //        println(data.availability)
 //        println(data.performanceInstanceId)
 //        println(data.seatName)
-        println("========================")
-    }
+//        println("========================")
+//    }
 
 }

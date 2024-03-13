@@ -18,11 +18,11 @@ class Ticket(
 
     //공연아이디
     @Column(name ="performance_instance_id")
-    val performanceInstanceId:Long?,
+    var performanceInstanceId:Long?,
 
     //공연이름
     @Column(name = "performance_name")
-    val performanceName: String,
+    var performanceName: String,
 
     //금액
     @Column(name = "price_info")
@@ -30,15 +30,15 @@ class Ticket(
 
     //좌석Id
     @Column(name = "seat_id")
-    val seatId: Long?,
+    var seatId: Long?,
 
     //좌석번호
     @Column(name = "seat_number")
-    val setInfo: String,
+    var setInfo: String,
 
     //예매된 시간
     @Column(name = "reserved_time")
-    val reservedTime: String
+    var reservedTime: String
 
 ) {
 }
