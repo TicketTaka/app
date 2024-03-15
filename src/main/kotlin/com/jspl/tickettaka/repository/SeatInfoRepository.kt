@@ -11,8 +11,9 @@ interface SeatInfoRepository :JpaRepository<SeatInfo,Long>{
     fun findFirstByPerformanceInstanceId(id :Long) :SeatInfo?
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("select s from SeatInfo s where s.id = :id")   //아래 내가 만든 로직의 기능을 설명
+    @Query("select s from SeatInfo s where s.id = :id")
     fun findWithLockById(id: Long) :SeatInfo?
+
     fun findByPerformanceInstanceIdAndAvailability(id:Long, availability:Boolean):List<SeatInfo>
 
 

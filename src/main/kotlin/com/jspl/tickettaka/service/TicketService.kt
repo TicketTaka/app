@@ -1,6 +1,7 @@
 package com.jspl.tickettaka.service
 
 import com.jspl.tickettaka.dto.reqeust.TicketRequestDTO
+import com.jspl.tickettaka.dto.response.SeatInfoResDto
 import com.jspl.tickettaka.dto.response.TempPerfomanceDate
 import com.jspl.tickettaka.dto.response.TicketResponse
 import com.jspl.tickettaka.infra.exception.ErrorResponse
@@ -38,7 +39,7 @@ class TicketService(
         for (i in 1..seatCount) {
             val seatInfo = SeatInfo(
                 //콘서트 이름
-                performance_name = performanceInstanceInfo.performanceName,
+                performanceName = performanceInstanceInfo.performanceName,
                 //콘서트 정보(고유번호)
                 uniqueId = performanceInstanceInfo.performanceUniqueId,
                 //공연장 회자 아이디
@@ -61,6 +62,9 @@ class TicketService(
         val seatInfo = seatInfoRepository.findWithLockById(seatId)
             ?: throw ModelNotFoundException("SeatInfo", seatId)
 
+//        val seatInfo = seatInfoRepository.findByIdOrNull(seatId)
+//            ?: throw ModelNotFoundException("SeatInfo", seatId)
+
         val performanceInstanceId = seatInfo.performanceInstanceId
         val performanceInstanceInfo = performanceInstanceFindById(performanceInstanceId)
 
@@ -72,7 +76,7 @@ class TicketService(
         val ticket = Ticket(
             memberId = memberId,                                    //나의 정보
             performanceInstanceId = seatInfo.performanceInstanceId, //공연Id
-            performanceName = seatInfo.performance_name,            //공연이름
+            performanceName = seatInfo.performanceName,            //공연이름
             priceInfo = seatInfo.price,                             //금액
             seatId = seatInfo.id,                                   //좌석Id
             setInfo = seatInfo.seatNumber.toString(),               //좌석번호
@@ -143,11 +147,6 @@ class TicketService(
             result.add(date)
         }
 
-
-        //좌석 정보 불러오기
-
-
-
             return result
 
     }
@@ -166,16 +165,19 @@ class TicketService(
 
     ///////////////////////////////////[비지니스 로직 아님]/////////////////////////////////////////////////////////////////////////////////////////
     //남은 좌석 정보 보기
-//    fun viewAllSeatInfo(performanceInstanceId: Long): List<Int> {
-    fun viewAllSeatInfo(performanceInstanceId: Long): List<String> {
-        val seatInfo = findByPerformanceInstanceIdAndAvailability(performanceInstanceId, true)
+
+    fun viewAllSeatInfo(performanceInstanceId: Long): List<SeatInfoResDto> {
+        var seatInfo = seatInfoRepository.findByPerformanceInstanceIdAndAvailability(performanceInstanceId, true)
         val seatList: MutableList<String> = mutableListOf()
 
-        for (seat in seatInfo) {
-            seatList.add("ID ${seat.id} : 좌석번호 ${seat.seatNumber}")
+
+        if(seatInfo.isEmpty()){
+            makeSeat(performanceInstanceId)
+            seatInfo = seatInfoRepository.findByPerformanceInstanceIdAndAvailability(performanceInstanceId, true)
         }
 
-        return seatList
+
+        return SeatInfoResDto.fromEntities(seatInfo)
     }
 
     //예약된 좌석 정보보기

@@ -6,6 +6,8 @@ import com.jspl.tickettaka.infra.exception.ModelNotFoundException
 import com.jspl.tickettaka.model.Member
 import com.jspl.tickettaka.model.enums.MemberRole
 import com.jspl.tickettaka.repository.MemberRepository
+import com.jspl.tickettaka.repository.PerformanceRepository
+import com.jspl.tickettaka.repository.SeatInfoRepository
 import com.jspl.tickettaka.service.MemberService
 import com.jspl.tickettaka.service.TicketService
 import jakarta.transaction.Transactional
@@ -26,7 +28,11 @@ class SeatCheackTest(
     @Autowired
     private val ticketService: TicketService ,
     @Autowired
-    private val memberService: MemberService
+    private val memberService: MemberService,
+    @Autowired
+    private val performanceRepository: PerformanceRepository,
+    @Autowired
+    private val seatInfoRepository: SeatInfoRepository
 ) {
 
     @Test
@@ -42,22 +48,35 @@ class SeatCheackTest(
     }
 
     @Test
+    @Transactional
+    fun 좌석정보가_없을경우_좌석_생성() {
+        val performanceInstanceId = 1.toLong()
+        val seatInfo = seatInfoRepository.findByPerformanceInstanceIdAndAvailability(performanceInstanceId, true)
+
+        if(seatInfo.isEmpty()){
+           ticketService.makeSeat(performanceInstanceId)
+            val seatInfo = seatInfoRepository.findByPerformanceInstanceIdAndAvailability(performanceInstanceId, true)
+
+            for(s in seatInfo) {
+                println("id: ${s.id} : 좌석 ${s.seatNumber}")
+            }
+
+            println("좌석이 없어서 만들었음")
+        }else {
+            for(s in seatInfo) {
+                println("id: ${s.id} : 좌석 ${s.seatNumber}")
+            }
+
+            println("좌석이 있어서 불러왔음")
+        }
+    }
+
+
+    @Test
     fun 회원수확인() {
         println( memberRepository.findAll().size)
     }
 
-    @Test
-    fun 화원이름변경(){
-         var memberInfo =memberRepository.findByIdOrNull(2)!!
-
-        println("=============================")
-        println(memberInfo.username)
-        println("=============================")
-
-        val executors = Executors.newFixedThreadPool(4)
-        val name = "string"
-        val changeName = "changeUserName1"
-    }
 
     @Test
     fun 가입된회원조회(){
@@ -81,13 +100,21 @@ class SeatCheackTest(
     }
 
     @Test
+    fun 좌석갯수확인(){
+        val size = memberRepository.findAll()
+        for(i in size){
+           memberRepository.delete(i)
+        }
+    }
+
+    @Test
     fun 좌석수확인(){
 
         val allMemberInfo = memberRepository.findAll()
         val memberIdList :MutableList<Long> = mutableListOf()
-        var count = 0
+        var count = allMemberInfo.size
 
-        while(allMemberInfo.size <4) {
+        while(count<4) {
             val data = Member(
                 email = "temp" +count +"@naver.com",
                 password = "string",
@@ -99,10 +126,7 @@ class SeatCheackTest(
             if(memberEmail == null){
                 memberRepository.save(data)
             }
-
             count++
-
-
         }
 
         for(m in allMemberInfo){
@@ -120,27 +144,27 @@ class SeatCheackTest(
         val latch = CountDownLatch(4)
 
         executors.execute {
-            ticketService.ticketing(memberInfo, 100)
+            ticketService.ticketing(memberInfo, 9290)
             latch.countDown()
         }
 
         executors.execute {
-            ticketService.ticketing(member2Info, 100)
+            ticketService.ticketing(member2Info, 8225)
             latch.countDown()
         }
 
         executors.execute {
-            ticketService.ticketing(member3Info, 100)
+            ticketService.ticketing(member3Info, 8225)
             latch.countDown()
         }
 
         executors.execute {
-            ticketService.ticketing(member4Info, 100)
+            ticketService.ticketing(member4Info, 8225)
             latch.countDown()
         }
         latch.await()  // 일괄 종료시점을 맞추는 로직?
 
-         val myTicketInfo = memberService.viewMyAllTicket(1)
+         val myTicketInfo = memberService.viewMyAllTicket(member2Info)
 
         println("========================================")
         println("========================================")

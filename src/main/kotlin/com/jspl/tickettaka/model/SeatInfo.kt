@@ -11,8 +11,8 @@ class SeatInfo(
     val id: Long? = null,
 
     //콘서트 이름
-    @Column(name = "performance_name")
-    val performance_name: String,
+    @Column(name = "performanceName")
+    val performanceName: String,
 
     //콘서트 정보(고유번호)
     @Column(name = "performance_uniqueId")
