@@ -94,11 +94,9 @@ class TicketController(
        ticketService.cancelTicketTest(id)
     }
 
-
-
-    //좌석 만들기
-//    @PostMapping("/makeSeat(좌석만들기)")
-//    fun makeSeat(@RequestParam performanceInstanceId :Long) {
-//         ticketService.makeSeat(performanceInstanceId)
-//    }
+//    좌석 만들기
+    @PostMapping("/makeSeat(좌석만들기)")
+    fun makeSeat() {
+         ticketService.makeSeat()
+    }
 }

@@ -11,6 +11,10 @@ class PerformanceService(
 ) {
     fun updatePerformance() {
         performanceDataCrawling.execute("20240301", "20240401")
+
+    }
+
+    fun updateInstance() {
         performanceDataCrawling.createInstance()
     }
 }

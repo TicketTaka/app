@@ -48,27 +48,27 @@ class SeatCheackTest(
     }
 
     @Test
-    @Transactional
+    @Transactional  //삭제될코드
     fun 좌석정보가_없을경우_좌석_생성() {
-        val performanceInstanceId = 1.toLong()
-        val seatInfo = seatInfoRepository.findByPerformanceInstanceIdAndAvailability(performanceInstanceId, true)
-
-        if(seatInfo.isEmpty()){
-           ticketService.makeSeat(performanceInstanceId)
-            val seatInfo = seatInfoRepository.findByPerformanceInstanceIdAndAvailability(performanceInstanceId, true)
-
-            for(s in seatInfo) {
-                println("id: ${s.id} : 좌석 ${s.seatNumber}")
-            }
-
-            println("좌석이 없어서 만들었음")
-        }else {
-            for(s in seatInfo) {
-                println("id: ${s.id} : 좌석 ${s.seatNumber}")
-            }
-
-            println("좌석이 있어서 불러왔음")
-        }
+//        val performanceInstanceId = 1.toLong()
+//        val seatInfo = seatInfoRepository.findByPerformanceInstance_IdAndAvailability(performanceInstanceId, true)
+//
+//        if(seatInfo.isEmpty()){
+//           ticketService.makeSeat()
+//            val seatInfo = seatInfoRepository.findByPerformanceInstance_IdAndAvailability(performanceInstanceId, true)
+//
+//            for(s in seatInfo) {
+//                println("id: ${s.id} : 좌석 ${s.seatNumber}")
+//            }
+//
+//            println("좌석이 없어서 만들었음")
+//        }else {
+//            for(s in seatInfo) {
+//                println("id: ${s.id} : 좌석 ${s.seatNumber}")
+//            }
+//
+//            println("좌석이 있어서 불러왔음")
+//        }
     }
 
 

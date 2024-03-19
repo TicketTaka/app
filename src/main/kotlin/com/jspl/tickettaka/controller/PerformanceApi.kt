@@ -16,4 +16,8 @@ class PerformanceApi(
         println("complete")
     }
 
+    @GetMapping("/update-performance-instance")
+    fun updateInstance() {
+        performanceService.updateInstance()
+    }
 }

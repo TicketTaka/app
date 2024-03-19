@@ -5,6 +5,7 @@ import com.jspl.tickettaka.dto.reqeust.SignUpRequestDTO
 import com.jspl.tickettaka.dto.response.AccessTokenResponse
 import com.jspl.tickettaka.dto.response.CheckMemberResponse
 import com.jspl.tickettaka.dto.response.TicketResponse
+import com.jspl.tickettaka.infra.exception.ApiResponseCode
 import com.jspl.tickettaka.infra.exception.ErrorResponse
 import com.jspl.tickettaka.infra.exception.ModelNotFoundException
 import com.jspl.tickettaka.infra.jwt.JwtPlugin
@@ -15,6 +16,7 @@ import com.jspl.tickettaka.model.toResponse
 import com.jspl.tickettaka.repository.MemberRepository
 import com.jspl.tickettaka.repository.TicketRepository
 import jakarta.transaction.Transactional
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
@@ -34,11 +36,18 @@ class MemberService(
     private val passwordEncoder: PasswordEncoder,
     private val ticketRepository: TicketRepository,
     private val ticketService: TicketService,
-    private val jwtPlugin: JwtPlugin
+    private val jwtPlugin: JwtPlugin,
+
+    @Value("\${kakao.secret.kakaoClientId}")
+    private val kakaoClientId: String,
+
+    @Value("\${kakao.secret.kakaoRedirectUri}")
+    private val kakaoRedirectUri: String
+
 ) {
 
-    val kakaoClientId = "60ffdbd138489440034b2e2bb1f592e3"
-    val kakaoRedirectUri = "http://localhost:8080/api/members/getKakaoAccessToken"
+//    val kakaoClientId = "60ffdbd138489440034b2e2bb1f592e3"
+//    val kakaoRedirectUri = "http://localhost:8080/api/members/getKakaoAccessToken"
 
     fun signUp(request: SignUpRequestDTO): CheckMemberResponse {
         val (email) = request
@@ -46,7 +55,8 @@ class MemberService(
         //이메일 중복확인
         if (findByEmail(email) != null) {
 //            throw IllegalArgumentException("이미 존재하는 email 입니다")
-            throw ErrorResponse("이미 존재하는 email 입니다")
+//            throw ErrorResponse(null,"이미 존재하는 email 입니다")
+            ErrorResponse(ApiResponseCode.NOT_ACCEPTABLE,"이미 존재하는 email 입니다")
         }
 
         //유저 db에 저장

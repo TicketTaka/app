@@ -7,6 +7,7 @@ import com.jspl.tickettaka.dto.response.CheckMemberResponse
 import com.jspl.tickettaka.dto.response.TicketResponse
 import com.jspl.tickettaka.infra.jwt.JwtPlugin
 import com.jspl.tickettaka.service.MemberService
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.*
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.annotation.AuthenticationPrincipal
@@ -17,11 +18,17 @@ import org.springframework.web.servlet.view.RedirectView
 @RestController
 @RequestMapping("/api/members")
 class MemberController(
-    private val memberService: MemberService
+    private val memberService: MemberService,
+
+    @Value("\${kakao.secret.kakaoClientId}")
+    private val kakaoClientId: String,
+
+    @Value("\${kakao.secret.kakaoRedirectUri}")
+    private val kakaoRedirectUri: String
 ) {
 
-    val kakaoClientId = "60ffdbd138489440034b2e2bb1f592e3"
-    val kakaoRedirectUri = "http://localhost:8080/api/members/getKakaoAccessToken"
+//    val kakaoClientId = "60ffdbd138489440034b2e2bb1f592e3"
+//    val kakaoRedirectUri = "http://localhost:8080/api/members/getKakaoAccessToken"
 
     @PostMapping("/signup")
     fun singUp(@RequestBody signUpRequestDTO: SignUpRequestDTO):ResponseEntity<*>{
