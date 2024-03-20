@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SSE Test</title>
+</head>
+<body>
+<div id="notifications"></div>
+
+<script>
+    const notificationsDiv = document.getElementById('notifications');
+    const eventSource = new EventSource('/redis/subscribe/notifications');
+
+    eventSource.onmessage = function(event) {
+        const newElement = document.createElement('div');
+        newElement.textContent = event.data;
+        notificationsDiv.appendChild(newElement);
+    };
+
+    eventSource.onerror = function(error) {
+        console.error('EventSource failed:', error);
+        eventSource.close();
+    };
+</script>
+</body>
+</html>
