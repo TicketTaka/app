@@ -2,6 +2,8 @@ package com.jspl.tickettaka.service
 
 import com.jspl.tickettaka.dto.response.SeatInfoResDto
 import com.jspl.tickettaka.dto.response.TempPerfomanceDate
+import com.jspl.tickettaka.infra.exception.ApiResponseCode
+import com.jspl.tickettaka.infra.exception.ErrorResponse
 import com.jspl.tickettaka.infra.exception.ModelNotFoundException
 import com.jspl.tickettaka.model.*
 import com.jspl.tickettaka.repository.*
@@ -103,7 +105,6 @@ class TicketService(
             performanceInstanceInfo.remainSeat--
             seatInfo.availability = false
         }
-
         ticketRepository.save(ticket)
         return "예매 완료 되었습니다"
     }
@@ -126,9 +127,25 @@ class TicketService(
 
     //티켓 예약일 변경
     fun rescheduleTicket(memberId: Long, ticketId: Long, seatId: Long): String {
-        var ticketInfo = ticketRepository.findByIdOrNull(ticketId)!!
+        val ticketInfo = ticketRepository.findByIdOrNull(ticketId) ?: return "잘못된 요청 입니다"
         val bfSeatInfo = seatInfoRepository.findByIdOrNull(ticketInfo.seatId)!!
-        val afSeatInfo = seatInfoRepository.findByIdOrNull(seatId)!!
+        val afSeatInfo = seatInfoRepository.findByIdOrNull(seatId)
+
+        if(ticketInfo.memberId  != memberId){
+            return "잘못된 요청입니다  : 다른사람으 티켓을 변경 할 수 없습니다"
+        }
+
+        if(afSeatInfo == null){
+            return "잘못된 요청입니다 : 해당 좌석이 존재하지 않습니다"
+        }
+
+        if(!afSeatInfo.availability){
+            return "잘못된 요청입니다 : 해당 좌석은 매진입니다"
+        }
+
+        if(bfSeatInfo.performanceInstance.performanceUniqueId != afSeatInfo.performanceInstance.performanceUniqueId){
+            return "잘못된 요청입니다 : 동일한 행사 좌석이 아닙니다"
+        }
 
         ticketInfo.seatId = seatId
         ticketInfo.setInfo = afSeatInfo.seatNumber.toString()
@@ -138,7 +155,7 @@ class TicketService(
 
         ticketRepository.save(ticketInfo)
 
-        return "해당 날짜로 예약이 변경되었습니다 "
+        return "예약이 변경되었습니다"
     }
 
     //같은 행사 다른 날자 확인
@@ -159,7 +176,7 @@ class TicketService(
 
             val date = TempPerfomanceDate(
                 date = p.date,
-                seatNumber = seatInfo.map { "ID ${it.id} : 좌석번호 ${it.seatNumber}" }
+                seatNumber = seatInfo.map { "유저ID ${it.id} : 좌석ID ${it.seatNumber}" }
             )
 
             result.add(date)
@@ -202,7 +219,6 @@ class TicketService(
         return seatList
     }
 
-
     //예약된 자리 자세히 보기
     fun viewAllSeatDetailInfo(performanceInstanceId: Long): List<String> {
 
@@ -216,12 +232,6 @@ class TicketService(
         }
 
         return seatList
-    }
-
-    //1개의 좌석 정보 보기
-    fun viewOneSeatInfo(seatId: Long): SeatInfo {
-        val seatInfo = seatInfoRepository.findByIdOrNull(seatId) ?: throw ModelNotFoundException("Seat", seatId)
-        return seatInfo
     }
 
     //한 유저의 전체 티켓 취소

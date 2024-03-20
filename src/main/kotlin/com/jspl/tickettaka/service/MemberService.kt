@@ -49,18 +49,22 @@ class MemberService(
 //    val kakaoClientId = "60ffdbd138489440034b2e2bb1f592e3"
 //    val kakaoRedirectUri = "http://localhost:8080/api/members/getKakaoAccessToken"
 
-    fun signUp(request: SignUpRequestDTO): CheckMemberResponse {
-        val (email) = request
+    fun signUp(signUpRequestDTO: SignUpRequestDTO): CheckMemberResponse {
+        val (email) = signUpRequestDTO
 
         //이메일 중복확인
         if (findByEmail(email) != null) {
-//            throw IllegalArgumentException("이미 존재하는 email 입니다")
+            throw IllegalArgumentException("이미 존재하는 email 입니다")
 //            throw ErrorResponse(null,"이미 존재하는 email 입니다")
-            ErrorResponse(ApiResponseCode.NOT_ACCEPTABLE,"이미 존재하는 email 입니다")
+//            ErrorResponse(ApiResponseCode.NOT_ACCEPTABLE,"이미 존재하는 email 입니다")
+//            ApiResponseCode.NOT_ACCEPTABLE
+//            ErrorResponse(ApiResponseCode.NOT_ACCEPTABLE, "이미 존재하는 email 입니다")
+//            val data = ErrorResponse(ApiResponseCode.BAD_REQUEST,"이미존재하는 email")
+
         }
 
         //유저 db에 저장
-        val signUpMember = saveMember(request)
+        val signUpMember = saveMember(signUpRequestDTO)
 
         val saveMember = memberRepository.save(signUpMember)
         val mappingMember = saveMember.toResponse()
@@ -140,14 +144,13 @@ class MemberService(
     }
 
     //회원삭제
-    fun deleteMember(memberId :Long){
+    fun deleteMember(memberId: Long) {
         val memberInfo = findByMemberId(memberId)
-//        val ticketInfo = ticketRepository.findByMemberId(memberId)
         val ticketInfo = findTicketInfoByMemberId(memberId)
 
-        if(ticketInfo != null){
+        if(ticketInfo.isNotEmpty()){
             val ticketId = ticketInfo.map { it.id }
-            for(t in ticketId){
+            for (t in ticketId) {
                 ticketService.cancelTicket(t!!)
             }
         }
@@ -156,9 +159,6 @@ class MemberService(
     }
 
     fun viewMyAllTicket(memberId: Long): List<TicketResponse> {
-//        val findTicketInfo = ticketRepository.findByMemberId(memberId)
-//            ?: throw ModelNotFoundException("Ticket", memberId)
-
         val findTicketInfo = findTicketInfoByMemberId(memberId)
         return findTicketInfo.map { it.toResponse() }
     }
@@ -189,9 +189,9 @@ class MemberService(
     }
 
     private fun saveKakaoMember(kakaoId: String, userNickname: String): CheckMemberResponse {
-        val memberInfo  = findByEmail(kakaoId)
+        val memberInfo = findByEmail(kakaoId)
 
-        if(memberInfo != null){
+        if (memberInfo != null) {
             return memberInfo.toResponse()
         } else {
             val userData = Member(
@@ -215,20 +215,19 @@ class MemberService(
         return findMember
     }
 
-    private fun findTicketInfoByMemberId(memberId: Long):List<Ticket>{
+    private fun findTicketInfoByMemberId(memberId: Long): List<Ticket> {
         return ticketRepository.findByMemberId(memberId)
             ?: throw ModelNotFoundException("Ticket", memberId)
     }
 
 
-////////////////////////////////////[비지니스 로직 아님]///////////////////////////////////////////////
+    ////////////////////////////////////[비지니스 로직 아님]///////////////////////////////////////////////
     //임시 데이터 뷰
     fun viewAllMemberData(): List<CheckMemberResponse> {
         return memberRepository.findAll().map { it.toResponse() }
     }
 
-
-    fun memberRoleChange(memberId : Long): String {
+    fun memberRoleChange(memberId: Long): String {
         val memberInfo = findByMemberId(memberId)
 
         memberInfo.role = when (memberInfo.role.name) {
@@ -240,7 +239,4 @@ class MemberService(
         memberRepository.save(memberInfo)
         return "유저의 정보가 ${memberInfo.role.name}로 변환되었습니다"
     }
-
-
-
 }

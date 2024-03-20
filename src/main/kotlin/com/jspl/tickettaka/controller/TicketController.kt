@@ -40,14 +40,6 @@ class TicketController(
             .body(ticketService.viewAllSeatResInfo(performanceInstanceId))
     }
 
-    //하나의 좌석 정보 보기
-    @GetMapping("{id}")
-    fun viewOneSeatInfo(@RequestParam id:Long):ResponseEntity<SeatInfo> {
-        return ResponseEntity
-            .status(HttpStatus.OK)
-            .body(ticketService.viewOneSeatInfo(id))
-    }
-
     //티켓 예약하기
     @PostMapping("/ticketing(예약 하기)")
     fun ticketing(@AuthenticationPrincipal member:User,@RequestParam seatId:Long):ResponseEntity<String> {
@@ -86,7 +78,6 @@ class TicketController(
     @GetMapping("/checkPerformance(같은 행사 다른 날짜 확인하기)")
     fun performanceInstanceCheck(@RequestParam id:Long) :ResponseEntity<List<TempPerfomanceDate>>{
         return ResponseEntity.status(HttpStatus.OK).body(ticketService.performanceInstanceCheck(id))
-//        ticketService.performanceInstanceCheck(id)
     }
 
     @DeleteMapping("/{id}/test/(한 유저의 모든 티켓 취소하기)")

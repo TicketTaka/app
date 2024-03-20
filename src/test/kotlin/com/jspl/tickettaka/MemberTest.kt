@@ -6,6 +6,7 @@ import com.jspl.tickettaka.model.enums.MemberRole
 import com.jspl.tickettaka.repository.MemberRepository
 import com.jspl.tickettaka.service.MemberService
 import jakarta.transaction.Transactional
+import junit.framework.TestCase.assertEquals
 import org.awaitility.core.DurationFactory
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -25,26 +26,31 @@ class MemberTest(
 
     @Test
     @Transactional
-    fun 이메일중복체크() {
+    fun 이메일중복체크_에러발생() {
 
-            val member = SignUpRequestDTO(
-                email = "Temp3@naver.com",
-                password = "string",
-                username = "user1",
-                role = "TempNameConsumer"
-            )
+        val member = SignUpRequestDTO(
+            email = "Temp4@naver.com",
+            password = "string",
+            username = "user1",
+            role = "TempNameConsumer"
+        )
 
-            memberService.signUp(member)
+        memberService.signUp(member)
 
-            val member2 = SignUpRequestDTO(
-                email = "Temp3@naver.com",
-                password = "string",
-                username = "user1",
-                role = "TempNameConsumer"
-            )
+        val member2 = SignUpRequestDTO(
+            email = "Temp4@naver.com",
+            password = "string",
+            username = "user1",
+            role = "TempNameConsumer"
+        )
 
+        val exception = assertThrows<IllegalArgumentException> {
             memberService.signUp(member2)
         }
+
+        assertEquals("이미 존재하는 email 입니다", exception.message)
+
+    }
 
     @Test
     fun 회원가입한_유저정보_보기() {
