@@ -56,15 +56,19 @@ class PerformanceDataCrawling(
 
     fun execute(startDate: String, endDate: String) {
         val allPerformance01 = fetchData(startDate, endDate, "01")
-        val allPerformance02 = fetchData(startDate, endDate, "02")
+//        val allPerformance02 = fetchData(startDate, endDate, "02")
 
-        if (allPerformance01 != null && allPerformance02 != null) {
+        if(allPerformance01 != null) {
             println(allPerformance01.size)
             performanceRepository.saveAll(allPerformance01)
-
-            println(allPerformance02.size)
-            performanceRepository.saveAll(allPerformance02)
         }
+//        if (allPerformance01 != null && allPerformance02 != null) {
+//            println(allPerformance01.size)
+//            performanceRepository.saveAll(allPerformance01)
+//
+//            println(allPerformance02.size)
+//            performanceRepository.saveAll(allPerformance02)
+//        }
     }
 
 
@@ -75,7 +79,13 @@ class PerformanceDataCrawling(
         val allPerformance = performanceRepository.findAllByDate(today, lastDate)
         val facilityIds = allPerformance.map { it.locationId }.toList()
         val concertHallsList = facilityDetailRepository.findAllByFacilityIdIn(facilityIds)
-        for ((currentInx, performance) in allPerformance.withIndex()) {
+
+        val concertHallsPairList = concertHallsList.groupBy {
+            it.facilityId
+        }
+
+        for (performance in allPerformance) {
+            val currentFacility = performance.locationId
             val random = Random()
 
             var currentDate = performance.startDate
@@ -86,7 +96,7 @@ class PerformanceDataCrawling(
                 if (performance.endDate > lastDate) {
                     break
                 }
-                val concertHalls = concertHallsList[currentInx]
+                val concertHalls = concertHallsPairList.getValue(currentFacility)
                 val possibleFacilityCnt = concertHalls.size
                 var index = 0
                 if(possibleFacilityCnt > 1) {

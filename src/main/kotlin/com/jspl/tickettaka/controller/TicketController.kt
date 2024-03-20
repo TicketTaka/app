@@ -1,16 +1,11 @@
 package com.jspl.tickettaka.controller
 
-import com.jspl.tickettaka.dto.reqeust.TicketRequestDTO
+
+import com.jspl.tickettaka.dto.response.SeatInfoResDto
 import com.jspl.tickettaka.dto.response.TempPerfomanceDate
 import com.jspl.tickettaka.model.SeatInfo
-import com.jspl.tickettaka.repository.PerformanceInstanceRepository
-import com.jspl.tickettaka.repository.SeatInfoRepository
-import com.jspl.tickettaka.repository.TicketRepository
 import com.jspl.tickettaka.service.TicketService
-import org.springframework.data.repository.findByIdOrNull
-import org.springframework.http.HttpEntity
 import org.springframework.http.HttpStatus
-import org.springframework.http.HttpStatusCode
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.core.userdetails.User
@@ -19,12 +14,9 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
-import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
-import java.lang.instrument.Instrumentation
-import kotlin.random.Random
 
 @RestController
 @RequestMapping("/api/tickets")
@@ -32,15 +24,9 @@ class TicketController(
     private val ticketService: TicketService,
 ) {
 
-    //좌석 만들기
-    @PostMapping("/makeSeat(좌석만들기)")
-    fun makeSeat(@RequestParam performanceInstanceId :Long) {
-         ticketService.makeSeat(performanceInstanceId)
-    }
-
     //에약 가능한 좌석 전부 보기
     @GetMapping("/viewSeatInfo(예약 가능한 좌석보기)")
-    fun viewSeatInfo(@RequestParam performanceInstanceId: Long):ResponseEntity<List<String>> {
+    fun viewSeatInfo(@RequestParam performanceInstanceId: Long):ResponseEntity<List<SeatInfoResDto>> {
         return ResponseEntity
             .status(HttpStatus.OK)
             .body(ticketService.viewAllSeatInfo(performanceInstanceId))
@@ -52,14 +38,6 @@ class TicketController(
         return ResponseEntity
             .status(HttpStatus.OK)
             .body(ticketService.viewAllSeatResInfo(performanceInstanceId))
-    }
-
-    //하나의 좌석 정보 보기
-    @GetMapping("{id}")
-    fun viewOneSeatInfo(@RequestParam id:Long):ResponseEntity<SeatInfo> {
-        return ResponseEntity
-            .status(HttpStatus.OK)
-            .body(ticketService.viewOneSeatInfo(id))
     }
 
     //티켓 예약하기
@@ -100,11 +78,16 @@ class TicketController(
     @GetMapping("/checkPerformance(같은 행사 다른 날짜 확인하기)")
     fun performanceInstanceCheck(@RequestParam id:Long) :ResponseEntity<List<TempPerfomanceDate>>{
         return ResponseEntity.status(HttpStatus.OK).body(ticketService.performanceInstanceCheck(id))
-//        ticketService.performanceInstanceCheck(id)
     }
 
     @DeleteMapping("/{id}/test/(한 유저의 모든 티켓 취소하기)")
     fun cancleTicketTest(@PathVariable id :Long){
        ticketService.cancelTicketTest(id)
+    }
+
+//    좌석 만들기
+    @PostMapping("/makeSeat(좌석만들기)")
+    fun makeSeat() {
+         ticketService.makeSeat()
     }
 }

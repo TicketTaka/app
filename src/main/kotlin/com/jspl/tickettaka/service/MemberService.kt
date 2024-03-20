@@ -5,14 +5,18 @@ import com.jspl.tickettaka.dto.reqeust.SignUpRequestDTO
 import com.jspl.tickettaka.dto.response.AccessTokenResponse
 import com.jspl.tickettaka.dto.response.CheckMemberResponse
 import com.jspl.tickettaka.dto.response.TicketResponse
+import com.jspl.tickettaka.infra.exception.ApiResponseCode
+import com.jspl.tickettaka.infra.exception.ErrorResponse
 import com.jspl.tickettaka.infra.exception.ModelNotFoundException
 import com.jspl.tickettaka.infra.jwt.JwtPlugin
 import com.jspl.tickettaka.model.Member
+import com.jspl.tickettaka.model.Ticket
 import com.jspl.tickettaka.model.enums.MemberRole
 import com.jspl.tickettaka.model.toResponse
 import com.jspl.tickettaka.repository.MemberRepository
 import com.jspl.tickettaka.repository.TicketRepository
 import jakarta.transaction.Transactional
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
@@ -32,27 +36,39 @@ class MemberService(
     private val passwordEncoder: PasswordEncoder,
     private val ticketRepository: TicketRepository,
     private val ticketService: TicketService,
-    private val jwtPlugin: JwtPlugin
+    private val jwtPlugin: JwtPlugin,
+
+    @Value("\${kakao.secret.kakaoClientId}")
+    private val kakaoClientId: String,
+
+    @Value("\${kakao.secret.kakaoRedirectUri}")
+    private val kakaoRedirectUri: String
+
 ) {
 
-    val kakaoClientId = "60ffdbd138489440034b2e2bb1f592e3"
-    val kakaoRedirectUri = "http://localhost:8080/api/members/getKakaoAccessToken"
+//    val kakaoClientId = "60ffdbd138489440034b2e2bb1f592e3"
+//    val kakaoRedirectUri = "http://localhost:8080/api/members/getKakaoAccessToken"
 
-    fun signUp(request: SignUpRequestDTO): CheckMemberResponse {
-        val (email) = request
+    fun signUp(signUpRequestDTO: SignUpRequestDTO): CheckMemberResponse {
+        val (email) = signUpRequestDTO
 
         //이메일 중복확인
         if (findByEmail(email) != null) {
             throw IllegalArgumentException("이미 존재하는 email 입니다")
+//            throw ErrorResponse(null,"이미 존재하는 email 입니다")
+//            ErrorResponse(ApiResponseCode.NOT_ACCEPTABLE,"이미 존재하는 email 입니다")
+//            ApiResponseCode.NOT_ACCEPTABLE
+//            ErrorResponse(ApiResponseCode.NOT_ACCEPTABLE, "이미 존재하는 email 입니다")
+//            val data = ErrorResponse(ApiResponseCode.BAD_REQUEST,"이미존재하는 email")
+
         }
 
         //유저 db에 저장
-        val signUpMember = saveMember(request)
+        val signUpMember = saveMember(signUpRequestDTO)
 
-        //트랜잭션 내부라면 작성하지 않아도 되는 로직
         val saveMember = memberRepository.save(signUpMember)
-        val MappingMember = saveMember.toResponse()
-        return MappingMember
+        val mappingMember = saveMember.toResponse()
+        return mappingMember
     }
 
     fun login(request: LoginRequestDTO): AccessTokenResponse {
@@ -79,7 +95,6 @@ class MemberService(
         params.add("redirect_uri", kakaoRedirectUri)
         params.add("code", code)
 
-        //String url, @Nullable Object request, Class<T> responseType, Object... uriVariables)
         val responseToken = restTemplate.postForObject(
             "https://kauth.kakao.com/oauth/token",
             params,
@@ -128,24 +143,28 @@ class MemberService(
         return AccessTokenResponse(data)
     }
 
-    fun memberRoleChange(memberId : Long): String {
+    //회원삭제
+    fun deleteMember(memberId: Long) {
         val memberInfo = findByMemberId(memberId)
+        val ticketInfo = findTicketInfoByMemberId(memberId)
 
-        memberInfo.role = when (memberInfo.role.name) {
-            "TempNameProducer" -> MemberRole.TempNameConsumer
-            "TempNameConsumer" -> MemberRole.TempNameProducer
-            else -> throw IllegalArgumentException("잘못된 접근입니다")
+        if(ticketInfo.isNotEmpty()){
+            val ticketId = ticketInfo.map { it.id }
+            for (t in ticketId) {
+                ticketService.cancelTicket(t!!)
+            }
         }
 
-        memberRepository.save(memberInfo)
-        return "유저의 정보가 ${memberInfo.role.name}로 변환되었습니다"
+        memberRepository.delete(memberInfo)
+    }
+
+    fun viewMyAllTicket(memberId: Long): List<TicketResponse> {
+        val findTicketInfo = findTicketInfoByMemberId(memberId)
+        return findTicketInfo.map { it.toResponse() }
     }
 
 
-    //임시 데이터 뷰
-    fun viewAllMemberData(): List<CheckMemberResponse> {
-        return memberRepository.findAll().map { it.toResponse() }
-    }
+    ////////////////////////////////////[private]///////////////////////////////////////////////
 
     private fun saveMember(request: SignUpRequestDTO): Member {
         val (email, username, password, role) = request
@@ -169,32 +188,10 @@ class MemberService(
         return signUpMember
     }
 
-    //회원삭제
-    fun deleteMember(memberId :Long){
-        val memeberInfo = findByMemberId(memberId)
-
-        val ticketInfo = ticketRepository.findByMemberId(memberId)
-
-        if(ticketInfo != null){
-            val ticketId = ticketInfo.map { it.id }
-            for(t in ticketId){
-                ticketService.cancelTicket(t!!)
-            }
-        }
-
-        memberRepository.delete(memeberInfo)
-    }
-
-    fun viewMyAllTicket(memberId: Long): List<TicketResponse> {
-        val findTicketInfo = ticketRepository.findByMemberId(memberId)
-            ?: throw ModelNotFoundException("Ticket", memberId)
-        return findTicketInfo.map { it.toResponse() }
-    }
-
     private fun saveKakaoMember(kakaoId: String, userNickname: String): CheckMemberResponse {
-        val memberInfo  = findByEmail(kakaoId)
+        val memberInfo = findByEmail(kakaoId)
 
-        if(memberInfo != null){
+        if (memberInfo != null) {
             return memberInfo.toResponse()
         } else {
             val userData = Member(
@@ -212,12 +209,34 @@ class MemberService(
     }
 
     private fun findByMemberId(memberId: Long): Member {
-        //추후 null 생각하기
-        val findMemmber = memberRepository.findByIdOrNull(memberId)
+        val findMember = memberRepository.findByIdOrNull(memberId)
             ?: throw ModelNotFoundException("Member", memberId)
 
-        return findMemmber
+        return findMember
+    }
+
+    private fun findTicketInfoByMemberId(memberId: Long): List<Ticket> {
+        return ticketRepository.findByMemberId(memberId)
+            ?: throw ModelNotFoundException("Ticket", memberId)
     }
 
 
+    ////////////////////////////////////[비지니스 로직 아님]///////////////////////////////////////////////
+    //임시 데이터 뷰
+    fun viewAllMemberData(): List<CheckMemberResponse> {
+        return memberRepository.findAll().map { it.toResponse() }
+    }
+
+    fun memberRoleChange(memberId: Long): String {
+        val memberInfo = findByMemberId(memberId)
+
+        memberInfo.role = when (memberInfo.role.name) {
+            "TempNameProducer" -> MemberRole.TempNameConsumer
+            "TempNameConsumer" -> MemberRole.TempNameProducer
+            else -> throw IllegalArgumentException("잘못된 접근입니다")
+        }
+
+        memberRepository.save(memberInfo)
+        return "유저의 정보가 ${memberInfo.role.name}로 변환되었습니다"
+    }
 }
