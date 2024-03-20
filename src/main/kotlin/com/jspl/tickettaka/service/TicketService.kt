@@ -1,21 +1,13 @@
 package com.jspl.tickettaka.service
 
-import com.jspl.tickettaka.dto.reqeust.TicketRequestDTO
 import com.jspl.tickettaka.dto.response.TempPerfomanceDate
-import com.jspl.tickettaka.dto.response.TicketResponse
-import com.jspl.tickettaka.infra.exception.ErrorResponse
 import com.jspl.tickettaka.infra.exception.ModelNotFoundException
 import com.jspl.tickettaka.model.*
+import com.jspl.tickettaka.redis.RedisPublisher
 import com.jspl.tickettaka.repository.*
-import jakarta.persistence.Column
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.GenerationType
-import jakarta.persistence.Id
 import jakarta.transaction.Transactional
 import org.springframework.data.repository.findByIdOrNull
-import org.springframework.security.core.userdetails.User
 import org.springframework.stereotype.Service
-import kotlin.random.Random
 
 @Service
 @Transactional
@@ -23,7 +15,8 @@ class TicketService(
     private val performanceInstanceRepository: PerformanceInstanceRepository,
     private val performanceRepository: PerformanceRepository,
     private val seatInfoRepository: SeatInfoRepository,
-    private val ticketRepository: TicketRepository
+    private val ticketRepository: TicketRepository,
+    private val redisPublisher: RedisPublisher
 ) {
 
     fun makeSeat(performanceInstanceId: Long) {
@@ -54,7 +47,6 @@ class TicketService(
         }
     }
 
-
     //좌석 예매하기
     fun ticketing(memberId: Long, seatId: Long): String {
 
@@ -66,7 +58,7 @@ class TicketService(
 
 
         if (!seatInfo.availability) {
-            return "예매하실수 없는 좌석입니다"
+            return "예매할 수 없는 좌석입니다"
         }
 
         val ticket = Ticket(
@@ -84,7 +76,12 @@ class TicketService(
 
         seatInfo.availability = false
         ticketRepository.save(ticket)
-        return "예매 완료 되었습니다"
+
+//        // 예매완료 알림발행
+//        val message = "예매완료 - 좌석: ${ticket.setInfo}, 공연: ${ticket.performanceName}"
+//        redisPublisher.publishMessage("ticketing", message)
+
+        return "예매가 완료 되었습니다"
     }
 
     //예매된 티켓 취소
@@ -100,11 +97,15 @@ class TicketService(
 
         performanceInstanceInfo.remainSeat++
 
-        return "예약을 취소 하였습니다"
+//        // 예매취소 알림발행
+//        val message = "예매취소 - 티켓 ID: ${ticketId}"
+//        redisPublisher.publishMessage("ticketing", message)
+
+        return "예약이 취소 되었습니다"
     }
 
     //티켓 예약일 변경
-    fun rescheduleTicket(memberId: Long, ticketId: Long,seatId: Long): String {
+    fun rescheduleTicket(memberId: Long, ticketId: Long, seatId: Long): String {
         var ticketInfo =  ticketRepository.findByIdOrNull(ticketId)!!
         val bfSeatInfo  = seatInfoRepository.findByIdOrNull(ticketInfo.seatId)!!
         val afSeatInfo = seatInfoRepository.findByIdOrNull(seatId)!!
@@ -117,7 +118,11 @@ class TicketService(
 
         ticketRepository.save(ticketInfo)
 
-        return "해당 날짜로 예약이 변경되었습니다 "
+//        // 예매변경 알림발행
+//        val message = "예매변경 - 티켓 ID: ${ticketId}, 변경된 좌석: ${seatId}"
+//        redisPublisher.publishMessage("ticketing", message)
+
+        return "예매가 변경되었습니다"
     }
 
     //같은 행사 다른 날자 확인
