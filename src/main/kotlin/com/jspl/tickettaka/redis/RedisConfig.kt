@@ -26,7 +26,7 @@ class RedisConfig {
         connectionFactory: ReactiveRedisConnectionFactory
     ): ReactiveRedisMessageListenerContainer {
         val container = ReactiveRedisMessageListenerContainer(connectionFactory)
-        container.receive(ChannelTopic("notifications")).map { it.message }.subscribe()
+        container.receive(ChannelTopic("")).map { it.message }.subscribe()
         return container
     }
 }

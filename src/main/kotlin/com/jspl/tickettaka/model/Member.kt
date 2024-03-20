@@ -23,7 +23,7 @@ class Member(
     val password : String?,
 
     @Column(name = "role")
-    var role : MemberRole
+    var role : MemberRole,
 ) {
 
 }
