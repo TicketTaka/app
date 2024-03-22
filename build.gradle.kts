@@ -13,11 +13,11 @@ group = "com.jspl"
 version = "0.0.1-SNAPSHOT"
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_17
+	sourceCompatibility = JavaVersion.VERSION_17
 }
 
 repositories {
-    mavenCentral()
+	mavenCentral()
 }
 
 
@@ -45,36 +45,39 @@ noArg {
 val queryDslVersion = "5.0.0"  //추가
 
 dependencies {
-    implementation("org.springframework.boot:spring-boot-starter-web")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
-    implementation("org.jetbrains.kotlin:kotlin-reflect")
+	implementation("org.springframework.boot:spring-boot-starter-web")
+	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+	implementation("org.jetbrains.kotlin:kotlin-reflect")
 
     implementation("org.springframework.boot:spring-boot-starter-validation")
-    implementation("org.springframework.boot:spring-boot-starter-security")
 
     implementation("com.querydsl:querydsl-jpa:$queryDslVersion:jakarta") // 추가!
     kapt("com.querydsl:querydsl-apt:$queryDslVersion:jakarta") // 추가!
 
-    //jwt
-    implementation("io.jsonwebtoken:jjwt-api:0.12.3")
-    runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.3")
-    runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.3")
+	//jwt
+	implementation("io.jsonwebtoken:jjwt-api:0.12.3")
+	runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.3")
+	runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.3")
 
-    //SWAGGER
-    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")
+	//SWAGGER
+	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")
 
-    //JPA
-    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-    implementation("jakarta.persistence:jakarta.persistence-api:3.1.0")
+	//JPA
+	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+	implementation("jakarta.persistence:jakarta.persistence-api:3.1.0")
 
     //DB
     testRuntimeOnly("com.h2database:h2")
 
-    //jsoup
-    implementation("org.jsoup:jsoup:1.14.2")
+	//jsoup
+	implementation("org.jsoup:jsoup:1.14.2")
 
-    //coroution
-    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.0")
+	//coroution
+	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.0")
+
+	//Jedis
+	implementation("org.springframework.boot:spring-boot-starter-data-redis-reactive")
+	implementation("redis.clients:jedis:3.7.0")
 
     //batch
     implementation("org.springframework.batch:spring-batch-core")
@@ -89,27 +92,26 @@ dependencies {
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")
 
-}
+	// SSE
+	implementation ("org.springframework.boot:spring-boot-starter-webflux")
+	implementation ("org.springframework.boot:spring-boot-starter-actuator")
 
-noArg {
-    annotation("jakarta.persistence.Entity")
-    annotation("jakarta.persistence.MappedSuperclass")
-    annotation("jakarta.persistence.Embeddable")
-}
+	//security
+	implementation("org.springframework.boot:spring-boot-starter-security")
+	testImplementation("org.springframework.security:spring-security-test")
 
-allOpen {
-    annotation("jakarta.persistence.Entity")
-    annotation("jakarta.persistence.MappedSuperclass")
-    annotation("jakarta.persistence.Embeddable")
+	testImplementation("org.springframework.boot:spring-boot-starter-test")
+	compileOnly("org.projectlombok:lombok")
+	annotationProcessor("org.projectlombok:lombok")
 }
 
 tasks.withType<KotlinCompile> {
-    kotlinOptions {
-        freeCompilerArgs += "-Xjsr305=strict"
-        jvmTarget = "17"
-    }
+	kotlinOptions {
+		freeCompilerArgs += "-Xjsr305=strict"
+		jvmTarget = "17"
+	}
 }
 
 tasks.withType<Test> {
-    useJUnitPlatform()
+	useJUnitPlatform()
 }

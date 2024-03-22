@@ -39,5 +39,5 @@ class PerformanceInstance(
     val date: LocalDate = date
 
     @Column(name = "remain_seat")
-    val remainSeat: Long = remainSeat
+    var remainSeat: Long = remainSeat
 }

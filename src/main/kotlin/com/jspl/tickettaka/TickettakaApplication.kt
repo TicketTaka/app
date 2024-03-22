@@ -9,7 +9,6 @@ import org.springframework.scheduling.annotation.EnableScheduling
 @EnableBatchProcessing
 @EnableScheduling
 class TickettakaApplication
-
 fun main(args: Array<String>) {
     runApplication<TickettakaApplication>(*args)
 }

@@ -17,13 +17,13 @@ class Member(
     val email:String,
 
     @Column(name = "username")
-    val username:String,
+    var username:String,
 
     @Column(name = "password")
     val password : String?,
 
     @Column(name = "role")
-    var role : MemberRole
+    var role : MemberRole,
 ) {
 
 }
