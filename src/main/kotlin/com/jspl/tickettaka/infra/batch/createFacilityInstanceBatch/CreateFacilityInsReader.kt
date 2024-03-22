@@ -1,8 +1,9 @@
-package com.jspl.tickettaka.infra.createFacilityInstanceBatch
+package com.jspl.tickettaka.infra.batch.createFacilityInstanceBatch
 
 import com.jspl.tickettaka.model.FacilityDetail
 import com.jspl.tickettaka.model.FacilityInstance
 import com.jspl.tickettaka.repository.FacilityDetailRepository
+import jakarta.persistence.EntityManager
 import org.springframework.batch.item.ItemReader
 import org.springframework.stereotype.Component
 import java.time.LocalDate

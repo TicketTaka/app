@@ -1,8 +1,9 @@
-package com.jspl.tickettaka.infra.createFacilityInstanceBatch
+package com.jspl.tickettaka.infra.batch.createFacilityInstanceBatch
 
 import com.jspl.tickettaka.model.FacilityInstance
 import com.jspl.tickettaka.repository.FacilityInstanceRepository
 import com.jspl.tickettaka.repository.PerformanceRepository
+import jakarta.persistence.EntityManager
 import org.springframework.batch.item.Chunk
 import org.springframework.batch.item.ItemWriter
 import org.springframework.stereotype.Component

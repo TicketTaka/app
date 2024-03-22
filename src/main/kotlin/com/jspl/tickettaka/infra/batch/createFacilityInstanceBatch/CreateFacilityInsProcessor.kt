@@ -1,4 +1,4 @@
-package com.jspl.tickettaka.infra.createFacilityInstanceBatch
+package com.jspl.tickettaka.infra.batch.createFacilityInstanceBatch
 
 import com.jspl.tickettaka.model.FacilityDetail
 import com.jspl.tickettaka.model.FacilityInstance

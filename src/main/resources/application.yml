@@ -1,16 +1,7 @@
-server:
-  port: 8090
-  servlet:
-    context-path: /
-    encoding:
-      charset: UTF-8
-      enabled: true
-      force: true
-
-spring:
-  profiles:
-    include:
-      - secret
+#spring:
+#  profiles:
+#    include:
+#      - secret
 #  h2:
 #    console:
 #      enabled: true
@@ -20,32 +11,27 @@ spring:
 #    driver-class-name: org.h2.Driver
 #    url: jdbc:h2:mem:test
 #    username: sa
+#
+#  jpa:
+#    hibernate:
+#      ddl-auto: create
+#    show-sql: true
+
+spring:
+  profiles:
+    include:
+      - secret
 
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://concert-hall-ticket.cnaiu6sa65b5.ap-northeast-2.rds.amazonaws.com:3306/concert_hall_ticket?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
     username: admin
-    password: ldg1234!
+    password: Dong12345!
 
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: true
-
-  data:
-    redis:
-      host: localhost
-      port: 6379
-#      lettuce:
-#        pool:
-#          max-active:
-#          max-idle:
-#          min-idle:
-#          max-wait:
-
-data:
-  secret:
-    key: myKey
 
 logging:
   level:

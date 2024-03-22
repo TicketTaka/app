@@ -1,5 +1,6 @@
-package com.jspl.tickettaka.infra.newPerformanceBatch
+package com.jspl.tickettaka.infra.batch.newPerformanceBatch
 
+import com.jspl.tickettaka.data.PerformanceDataCrawling
 import com.jspl.tickettaka.model.Performance
 import com.jspl.tickettaka.repository.PerformanceRepository
 import org.springframework.batch.item.ItemProcessor

@@ -1,13 +1,12 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-	id("org.springframework.boot") version "3.2.3"
-	id("io.spring.dependency-management") version "1.1.4"
-	kotlin("jvm") version "1.9.22"
-	kotlin("plugin.spring") version "1.9.22"
-	kotlin("plugin.jpa") version "1.9.22"
-	kotlin("plugin.noarg") version "1.8.22"
-	kotlin("kapt") version "1.8.22" // 추가!
+    id("org.springframework.boot") version "3.2.3"
+    id("io.spring.dependency-management") version "1.1.4"
+    kotlin("jvm") version "1.9.22"
+    kotlin("plugin.spring") version "1.9.22"
+    kotlin("plugin.noarg") version "1.8.22"
+    kotlin("kapt") version "1.8.22" // 추가!
 }
 
 group = "com.jspl"
@@ -67,8 +66,8 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("jakarta.persistence:jakarta.persistence-api:3.1.0")
 
-	//DB
-	runtimeOnly("com.h2database:h2")
+    //DB
+    testRuntimeOnly("com.h2database:h2")
 
 	//jsoup
 	implementation("org.jsoup:jsoup:1.14.2")
@@ -81,9 +80,10 @@ dependencies {
 	implementation("redis.clients:jedis:3.7.0")
 
     //batch
-    implementation("org.springframework.batch:spring-batch-core:5.1.0")
+    implementation("org.springframework.batch:spring-batch-core")
     implementation ("org.springframework.boot:spring-boot-starter-batch")
-    testImplementation("org.springframework.batch:spring-batch-test:4.3.3")
+//    testImplementation("org.springframework.batch:spring-batch-core:5.1.0")
+    testImplementation("org.springframework.batch:spring-batch-test")
 
     //mySQL
     runtimeOnly("com.mysql:mysql-connector-j")

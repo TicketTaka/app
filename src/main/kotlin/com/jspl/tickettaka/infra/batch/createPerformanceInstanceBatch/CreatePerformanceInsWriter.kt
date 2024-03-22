@@ -1,4 +1,4 @@
-package com.jspl.tickettaka.infra.createPerformanceInstanceBatch
+package com.jspl.tickettaka.infra.batch.createPerformanceInstanceBatch
 
 import com.jspl.tickettaka.model.FacilityInstance
 import com.jspl.tickettaka.model.PerformanceInstance
