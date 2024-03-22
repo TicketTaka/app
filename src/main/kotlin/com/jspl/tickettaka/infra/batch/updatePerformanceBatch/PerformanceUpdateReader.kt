@@ -1,22 +1,23 @@
-package com.jspl.tickettaka.infra.createPerformanceInstanceBatch
+package com.jspl.tickettaka.infra.batch.updatePerformanceBatch
 
 import com.jspl.tickettaka.model.Performance
 import com.jspl.tickettaka.repository.PerformanceRepository
 import org.springframework.batch.item.ItemReader
+import org.springframework.batch.item.ItemStreamReader
 import org.springframework.stereotype.Component
 import java.time.LocalDate
 
 @Component
-class CreatePerformanceInsReader(
+class PerformanceUpdateReader(
     private val performanceRepository: PerformanceRepository
 ): ItemReader<Performance> {
 
+    private val startDate = LocalDate.now()
     private var currentIndex = 0
     override fun read(): Performance? {
-        val today = LocalDate.now()
-        val lastDate = today.plusMonths(1)
-        val allPerformance = performanceRepository.findAllByDate(today, lastDate)
+        val existingPerformances = performanceRepository.findPerformancesByState(startDate) ?: return null
 
-        return allPerformance.getOrNull(currentIndex++)
+        return existingPerformances.getOrNull(currentIndex++)
+
     }
 }

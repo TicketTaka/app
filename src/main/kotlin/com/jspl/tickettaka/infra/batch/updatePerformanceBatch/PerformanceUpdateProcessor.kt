@@ -1,4 +1,4 @@
-package com.jspl.tickettaka.infra.updatePerformanceBatch
+package com.jspl.tickettaka.infra.batch.updatePerformanceBatch
 
 import com.jspl.tickettaka.model.Performance
 import org.springframework.batch.item.ItemProcessor

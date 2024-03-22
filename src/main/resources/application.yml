@@ -26,7 +26,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://concert-hall-ticket.cnaiu6sa65b5.ap-northeast-2.rds.amazonaws.com:3306/concert_hall_ticket?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
     username: admin
-    password: ldg1234!
+    password: Dong12345!
 
   jpa:
     hibernate:

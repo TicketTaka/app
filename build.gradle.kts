@@ -68,7 +68,7 @@ dependencies {
     implementation("jakarta.persistence:jakarta.persistence-api:3.1.0")
 
     //DB
-    runtimeOnly("com.h2database:h2")
+    testRuntimeOnly("com.h2database:h2")
 
     //jsoup
     implementation("org.jsoup:jsoup:1.14.2")
@@ -77,9 +77,10 @@ dependencies {
     implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.0")
 
     //batch
-    implementation("org.springframework.batch:spring-batch-core:5.1.0")
+    implementation("org.springframework.batch:spring-batch-core")
     implementation ("org.springframework.boot:spring-boot-starter-batch")
-    testImplementation("org.springframework.batch:spring-batch-test:4.3.3")
+//    testImplementation("org.springframework.batch:spring-batch-core:5.1.0")
+    testImplementation("org.springframework.batch:spring-batch-test")
 
     //mySQL
     runtimeOnly("com.mysql:mysql-connector-j")
