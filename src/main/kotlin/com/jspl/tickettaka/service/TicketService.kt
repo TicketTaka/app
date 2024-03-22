@@ -6,6 +6,7 @@ import com.jspl.tickettaka.infra.exception.ApiResponseCode
 import com.jspl.tickettaka.infra.exception.ErrorResponse
 import com.jspl.tickettaka.infra.exception.ModelNotFoundException
 import com.jspl.tickettaka.model.*
+import com.jspl.tickettaka.redis.RedisService
 import com.jspl.tickettaka.repository.*
 import jakarta.transaction.Transactional
 import org.springframework.data.repository.findByIdOrNull
@@ -19,7 +20,8 @@ class TicketService(
     private val performanceInstanceRepository: PerformanceInstanceRepository,
     private val performanceRepository: PerformanceRepository,
     private val seatInfoRepository: SeatInfoRepository,
-    private val ticketRepository: TicketRepository
+    private val ticketRepository: TicketRepository,
+    private val redisService: RedisService
 ) {
 
     //좌석 만들기
@@ -106,6 +108,8 @@ class TicketService(
             seatInfo.availability = false
         }
         ticketRepository.save(ticket)
+        redisService.dequeue(performanceInstanceId.toString(), memberId.toString())
+
         return "예매 완료 되었습니다"
     }
 
