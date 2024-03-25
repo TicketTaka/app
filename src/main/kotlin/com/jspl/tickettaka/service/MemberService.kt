@@ -38,16 +38,14 @@ class MemberService(
     private val ticketService: TicketService,
     private val jwtPlugin: JwtPlugin,
 
-    @Value("\${kakao.secret.kakaoClientId}")
+    @Value("\${loginData.secret.kakaoClientId}")
     private val kakaoClientId: String,
 
-    @Value("\${kakao.secret.kakaoRedirectUri}")
+    @Value("\${loginData.secret.kakaoRedirectUri}")
     private val kakaoRedirectUri: String
 
 ) {
 
-//    val kakaoClientId = "60ffdbd138489440034b2e2bb1f592e3"
-//    val kakaoRedirectUri = "http://localhost:8080/api/members/getKakaoAccessToken"
 
     fun signUp(signUpRequestDTO: SignUpRequestDTO): CheckMemberResponse {
         val (email) = signUpRequestDTO
@@ -55,12 +53,6 @@ class MemberService(
         //이메일 중복확인
         if (findByEmail(email) != null) {
             throw IllegalArgumentException("이미 존재하는 email 입니다")
-//            throw ErrorResponse(null,"이미 존재하는 email 입니다")
-//            ErrorResponse(ApiResponseCode.NOT_ACCEPTABLE,"이미 존재하는 email 입니다")
-//            ApiResponseCode.NOT_ACCEPTABLE
-//            ErrorResponse(ApiResponseCode.NOT_ACCEPTABLE, "이미 존재하는 email 입니다")
-//            val data = ErrorResponse(ApiResponseCode.BAD_REQUEST,"이미존재하는 email")
-
         }
 
         //유저 db에 저장

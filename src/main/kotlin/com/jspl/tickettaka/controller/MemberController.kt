@@ -20,15 +20,13 @@ import org.springframework.web.servlet.view.RedirectView
 class MemberController(
     private val memberService: MemberService,
 
-    @Value("\${kakao.secret.kakaoClientId}")
+    @Value("\${loginData.secret.kakaoClientId}")
     private val kakaoClientId: String,
 
-    @Value("\${kakao.secret.kakaoRedirectUri}")
+    @Value("\${loginData.secret.kakaoRedirectUri}")
     private val kakaoRedirectUri: String
 ) {
 
-//    val kakaoClientId = "60ffdbd138489440034b2e2bb1f592e3"
-//    val kakaoRedirectUri = "http://localhost:8080/api/members/getKakaoAccessToken"
 
     @PostMapping("/signup")
     fun singUp(@RequestBody signUpRequestDTO: SignUpRequestDTO):ResponseEntity<*>{

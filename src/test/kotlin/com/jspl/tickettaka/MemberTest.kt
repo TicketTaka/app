@@ -1,16 +1,12 @@
 package com.jspl.tickettaka
 
 import com.jspl.tickettaka.dto.reqeust.SignUpRequestDTO
-import com.jspl.tickettaka.model.Member
-import com.jspl.tickettaka.model.enums.MemberRole
 import com.jspl.tickettaka.repository.MemberRepository
 import com.jspl.tickettaka.service.MemberService
 import jakarta.transaction.Transactional
-import junit.framework.TestCase.assertEquals
-import org.awaitility.core.DurationFactory
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import org.springframework.batch.core.configuration.DuplicateJobException
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 

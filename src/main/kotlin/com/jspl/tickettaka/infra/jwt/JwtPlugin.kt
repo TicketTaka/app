@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims
 import io.jsonwebtoken.Jws
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.security.Keys
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.nio.charset.StandardCharsets
 import java.time.Duration
@@ -11,12 +12,16 @@ import java.time.Instant
 import java.util.*
 
 @Component
-class JwtPlugin() {
-    companion object {
-        const val issuer = "티켓"
-        const val secret = "PO4c8z41Hia5gJG3oeuFJMRYBB4Ws4aZ"  // 추후 수정
-        const val accessTokenExpirationHour: Long = 168
-    }
+class JwtPlugin(
+    @Value("\${loginData.secret.jwtIssuer}")
+    private val issuer: String,
+
+    @Value("\${loginData.secret.jwtSecret}")
+    private val secret: String,
+
+    @Value("\${loginData.secret.jwtAccessTokenExpirationHour}")
+    private val accessTokenExpirationHour: Long
+) {
 
     fun validateToken(jwt: String): Result<Jws<Claims>> {
         return kotlin.runCatching {
@@ -25,14 +30,14 @@ class JwtPlugin() {
         }
     }
 
-    fun generateAccessToken(subject: String,username:String, role: String): String {
-        return generateToken(subject, username ,role, Duration.ofHours(accessTokenExpirationHour))
+    fun generateAccessToken(subject: String, username: String, role: String): String {
+        return generateToken(subject, username, role, Duration.ofHours(accessTokenExpirationHour))
     }
 
 
-    private fun generateToken(subject: String, username: String,role: String,expirationPeriod: Duration): String {
+    private fun generateToken(subject: String, username: String, role: String, expirationPeriod: Duration): String {
         val claims: Claims = Jwts.claims()
-            .add(mapOf("role" to role,"username" to username)).build()
+            .add(mapOf("role" to role, "username" to username)).build()
 
         val now = Instant.now()
         val key = Keys.hmacShaKeyFor(secret.toByteArray(StandardCharsets.UTF_8))
