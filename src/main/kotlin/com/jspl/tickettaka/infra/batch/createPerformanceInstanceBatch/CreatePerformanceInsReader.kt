@@ -9,22 +9,15 @@ import java.time.LocalDate
 
 @Component
 class CreatePerformanceInsReader(
-    private val entityManager: EntityManager
+    private val performanceRepository: PerformanceRepository
 ): ItemReader<Performance> {
 
     private var currentIndex = 0
     override fun read(): Performance? {
         val today = LocalDate.now()
         val lastDate = today.plusMonths(1)
-        val query = entityManager.createNativeQuery(
-            "SELECT * FROM Performance p WHERE p.start_date >= :startDate AND p.end_date < :endDate",
-            Performance::class.java
-        ).apply {
-            setParameter("startDate", today)
-            setParameter("endDate", lastDate)
-        }
+        val allPerformance = performanceRepository.findAllByDate(today, lastDate)
 
-        val resultList = query.resultList
-        return resultList.getOrNull(currentIndex++) as? Performance
+        return allPerformance.getOrNull(currentIndex++)
     }
 }
