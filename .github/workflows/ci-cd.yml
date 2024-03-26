@@ -32,6 +32,10 @@ jobs:
           loginData.secret.jwtIssuer : ${{secrets.APP_LOGINDATA_SECRET_JWTISSUER}}
           loginData.secret.jwtSecret:  ${{secrets.APP_LOGINDATA_SECRET_JWTSECRET}}
           loginData.secret.jwtAccessTokenExpirationHour : ${{secrets.APP_LOGINDATA_SECRET_JWTACCESSTOKENEXPIRATIONHOUR}}
+          spring.datasource.url: ${{ secrets.SPRING_DATASOURCE_URL }}
+          spring.datasource.username: ${{ secrets.SPRING_DATASOURCE_USERNAME }}
+          spring.datasource.password: ${{ secrets.SPRING_DATASOURCE_PASSWORD }}
+          data.secret.key: ${{ secrets.DATA_SECRET }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v2
