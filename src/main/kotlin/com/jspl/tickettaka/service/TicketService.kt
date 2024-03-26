@@ -2,8 +2,6 @@ package com.jspl.tickettaka.service
 
 import com.jspl.tickettaka.dto.response.SeatInfoResDto
 import com.jspl.tickettaka.dto.response.TempPerfomanceDate
-import com.jspl.tickettaka.infra.exception.ApiResponseCode
-import com.jspl.tickettaka.infra.exception.ErrorResponse
 import com.jspl.tickettaka.infra.exception.ModelNotFoundException
 import com.jspl.tickettaka.model.*
 import com.jspl.tickettaka.redis.RedisService
@@ -25,9 +23,9 @@ class TicketService(
 ) {
 
     //좌석 만들기
-
     fun makeSeat() {
         val startDate = LocalDate.now()
+        //좌석을 생산하는데 많은 시간 소요되어 12일 정도로 시간을 조절함
         val endDate = startDate.plusDays(12)
 
         val formattedStartDate = startDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
@@ -47,7 +45,6 @@ class TicketService(
             //공연회차와 연관된 공연시설에서 좌석수 가져오기
             val seatCount = p.facilityInstance.facilityDetail.seatCnt.toInt()
 
-
             if(seatCount == 0) {
                 val seatInfo = SeatInfo(
                     performanceInstance = p,
@@ -59,6 +56,9 @@ class TicketService(
                     availability = true,
                 )
                 seatInfoRepository.save(seatInfo)
+
+            //좌석을 만드는데 너무 많은 시간이 소요되는것을 방지해
+            //3500 이상의 좌석이 존재하는 테이블은 생성하지 않는 것으로 조취함
             } else if(seatCount <= 3500) {
                 val seatInfoList = mutableListOf<SeatInfo>()
                 for (i in 1..seatCount) {
@@ -87,7 +87,6 @@ class TicketService(
         val performanceInstanceId = seatInfo.performanceInstance.performanceInstanceId
         val performanceInstanceInfo = performanceInstanceFindById(performanceInstanceId)
 
-
         if (!seatInfo.availability) {
             return "예매하실수 없는 좌석입니다"
         }
@@ -102,11 +101,11 @@ class TicketService(
             reservedTime = seatInfo.performanceInstance.date.toString()              //예매된 시간
         )
 
-
         if(seatInfo.seatNumber != 0){
             performanceInstanceInfo.remainSeat--
             seatInfo.availability = false
         }
+
         ticketRepository.save(ticket)
         redisService.dequeue(performanceInstanceId.toString(), memberId.toString())
 
@@ -187,7 +186,6 @@ class TicketService(
         }
 
         return result
-
     }
 
     private fun findByPerformanceInstanceIdAndAvailability(
@@ -202,13 +200,16 @@ class TicketService(
             ?: throw ModelNotFoundException("PerformanceInstance", performanceInstanceId)
     }
 
-    ///////////////////////////////////[비지니스 로직 아님]/////////////////////////////////////////////////////////////////////////////////////////
+
     //남은 좌석 정보 보기
     fun viewAllSeatInfo(performanceInstanceId: Long): List<SeatInfoResDto> {
         val performanceInstance =performanceInstanceRepository.findByIdOrNull(performanceInstanceId)!!
         var seatInfo = findByPerformanceInstanceIdAndAvailability(performanceInstance, true)
         return SeatInfoResDto.fromEntities(seatInfo)
     }
+
+
+    ///////////////////////////////////[비지니스 로직 아님]/////////////////////////////////////////////////////////////////////////////////////////
 
     //예약된 좌석 정보보기
     fun viewAllSeatResInfo(performanceInstanceId: Long): List<Int> {
@@ -223,6 +224,7 @@ class TicketService(
         return seatList
     }
 
+    /*
     //예약된 자리 자세히 보기
     fun viewAllSeatDetailInfo(performanceInstanceId: Long): List<String> {
 
@@ -246,12 +248,12 @@ class TicketService(
             val seatInfo = seatInfoRepository.findByIdOrNull(m.seatId)!!
             seatInfo.availability = true
 
-
             val performanceInstanceInfo = performanceInstanceFindById(seatInfo.performanceInstance.performanceInstanceId)
             performanceInstanceInfo.remainSeat++
         }
     }
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+     */
 
 
 }

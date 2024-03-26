@@ -1,0 +1,54 @@
+name: ci-cd
+
+on:
+  pull_request:
+    types: [ closed ]
+    branches: [ "dev" ]
+
+jobs:
+  buid:
+
+    if: github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'dev'
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.APP_DOCKER_USER }}
+          password: ${{ secrets.APP_DOCKER_PASSWORD }}
+
+      - name: Set Yaml
+        uses: microsoft/variable-substitution@v1
+        with:
+          files: ./src/main/resources/application.yml
+        env:
+          spring.data.redis.host: ${{ secrets.REDIS_EC2_IP }}
+          loginData.secret.kakaoClientId : ${{secrets.APP_LOGINDATA_SECRET_KAKAOCLIENTID}}
+          loginData.secret.kakaoRedirectUri : ${{secrets.APP_LOGINDATA_SECRET_KAKAOREDIRECTURL}}
+          loginData.secret.jwtIssuer : ${{secrets.APP_LOGINDATA_SECRET_JWTISSUER}}
+          loginData.secret.jwtSecret:  ${{secrets.APP_LOGINDATA_SECRET_JWTSECRET}}
+          loginData.secret.jwtAccessTokenExpirationHour : ${{secrets.APP_LOGINDATA_SECRET_JWTACCESSTOKENEXPIRATIONHOUR}}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          push: true
+          tags: ${{ secrets.APP_DOCKER_HUB_REPO }}
+
+      - name: Deploy to server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.APP_EC2_IP }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_PEM_KEY }}
+          script: |
+            echo "${{ secrets.APP_DOCKER_PASSWORD }}" | sudo docker login -u ${{ secrets.APP_DOCKER_USER }} --password-stdin
+            sudo docker stop queue || true
+            sudo docker rm queue || true
+            sudo docker rmi -f ${{ secrets.APP_DOCKER_HUB_REPO }} || true
+            sudo docker run -d -p 8080:8080 --name queue ${{ secrets.APP_DOCKER_HUB_REPO }}
