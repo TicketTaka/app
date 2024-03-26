@@ -5,8 +5,6 @@ import com.jspl.tickettaka.dto.reqeust.SignUpRequestDTO
 import com.jspl.tickettaka.dto.response.AccessTokenResponse
 import com.jspl.tickettaka.dto.response.CheckMemberResponse
 import com.jspl.tickettaka.dto.response.TicketResponse
-import com.jspl.tickettaka.infra.exception.ApiResponseCode
-import com.jspl.tickettaka.infra.exception.ErrorResponse
 import com.jspl.tickettaka.infra.exception.ModelNotFoundException
 import com.jspl.tickettaka.infra.jwt.JwtPlugin
 import com.jspl.tickettaka.model.Member
@@ -21,13 +19,11 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
-import org.springframework.security.core.userdetails.User
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.util.LinkedMultiValueMap
 import org.springframework.util.MultiValueMap
 import org.springframework.web.client.RestTemplate
-import kotlin.jvm.Throws
 
 @Service
 @Transactional
@@ -214,11 +210,14 @@ class MemberService(
 
 
     ////////////////////////////////////[비지니스 로직 아님]///////////////////////////////////////////////
-    //임시 데이터 뷰
+
+/*
+    //회원가입한 유져 확인
     fun viewAllMemberData(): List<CheckMemberResponse> {
         return memberRepository.findAll().map { it.toResponse() }
     }
 
+    //맴버 권한 변경
     fun memberRoleChange(memberId: Long): String {
         val memberInfo = findByMemberId(memberId)
 
@@ -231,4 +230,7 @@ class MemberService(
         memberRepository.save(memberInfo)
         return "유저의 정보가 ${memberInfo.role.name}로 변환되었습니다"
     }
+
+
+ */
 }
